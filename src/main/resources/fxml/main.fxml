@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.example.javazip.controller.MainController" 
+      style="-fx-background-color: #f5f5f5; -fx-padding: 20;">
+    
+    <Label text="JavaZip - Compresseur de fichiers" 
+           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Button text="Ajouter fichiers" onAction="#handleAddFiles" 
+                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-pref-width: 120;"/>
+        <Button text="Ajouter dossier" onAction="#handleAddDirectory" 
+                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-pref-width: 120;"/>
+        <Button text="Supprimer sélection" onAction="#handleRemoveSelected" 
+                style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-pref-width: 120;"/>
+        <Button text="Vider la liste" onAction="#handleClearList" 
+                style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-pref-width: 120;"/>
+    </HBox>
+    
+    <ListView fx:id="filesListView" VBox.vgrow="ALWAYS" 
+              style="-fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-background-color: white;"/>
+    
+    <HBox spacing="10" alignment="CENTER">
+        <Button text="Compresser" onAction="#handleCompress" 
+                style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-pref-width: 150; -fx-pref-height: 40;"/>
+    </HBox>
+    
+    <VBox spacing="5">
+        <Label fx:id="statusLabel" text="Prêt" 
+               style="-fx-text-fill: #7f8c8d; -fx-font-style: italic;"/>
+        <Label fx:id="compressionRatioLabel" text="" 
+               style="-fx-text-fill: #27ae60; -fx-font-weight: bold;"/>
+    </VBox>
+    
+</VBox>

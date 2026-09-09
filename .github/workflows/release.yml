@@ -1,0 +1,79 @@
+name: Build and Release JavaZip
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn --batch-mode clean package
+
+      - name: Prepare application
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path target\app
+          Copy-Item target\javazip-1.0.0.jar target\app\
+          mvn dependency:copy-dependencies -DoutputDirectory=target/app -DincludeScope=runtime
+
+          Remove-Item target\app\javafx-base-21.0.6.jar -ErrorAction SilentlyContinue
+          Remove-Item target\app\javafx-controls-21.0.6.jar -ErrorAction SilentlyContinue
+          Remove-Item target\app\javafx-fxml-21.0.6.jar -ErrorAction SilentlyContinue
+          Remove-Item target\app\javafx-graphics-21.0.6.jar -ErrorAction SilentlyContinue
+
+      - name: Build application image
+        shell: powershell
+        run: |
+          $version = $env:GITHUB_REF_NAME -replace '^v', ''
+
+          New-Item -ItemType Directory -Force -Path package
+
+          jpackage `
+            --type app-image `
+            --name JavaZip `
+            --input target\app `
+            --main-jar javazip-1.0.0.jar `
+            --main-class com.example.javazip.JavaZipApp `
+            --dest package `
+            --app-version $version `
+            --icon JavaZip.ico `
+            --java-options '--module-path=$APPDIR --add-modules=javafx.controls,javafx.fxml'
+
+      - name: Create ZIP
+        shell: powershell
+        run: |
+          $version = $env:GITHUB_REF_NAME -replace '^v', ''
+
+          Compress-Archive `
+            -Path package\JavaZip `
+            -DestinationPath "JavaZip-$version.zip" `
+            -Force
+
+      - name: Create GitHub Release
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = $env:GITHUB_REF_NAME -replace '^v', ''
+
+          gh release create "v$version" `
+            "JavaZip-$version.zip" `
+            --title "JavaZip $version" `
+            --generate-notes
