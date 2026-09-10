@@ -66,6 +66,8 @@ jobs:
             -DestinationPath "JavaZip-$version.zip" `
             -Force
 
+          Copy-Item "package\JavaZip\JavaZip.exe" "JavaZip.exe"
+
       - name: Create GitHub Release
         shell: powershell
         env:
@@ -75,5 +77,6 @@ jobs:
 
           gh release create "v$version" `
             "JavaZip-$version.zip" `
+            "JavaZip.exe" `
             --title "JavaZip $version" `
             --generate-notes
