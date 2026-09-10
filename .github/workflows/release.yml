@@ -46,13 +46,17 @@ jobs:
           New-Item -ItemType Directory -Force -Path package
 
           jpackage `
-            --type app-image `
+            --type exe `
             --name JavaZip `
             --input target\app `
             --main-jar javazip-1.0.0.jar `
             --main-class com.example.javazip.JavaZipApp `
             --dest package `
             --app-version $version `
+            --vendor "JavaZip" `
+            --description "Application de compression ZIP avec JavaFX" `
+            --win-menu `
+            --win-shortcut `
             --icon JavaZip.ico `
             --java-options '--module-path=$APPDIR --add-modules=javafx.controls,javafx.fxml'
 
@@ -61,12 +65,7 @@ jobs:
         run: |
           $version = $env:GITHUB_REF_NAME -replace '^v', ''
 
-          Compress-Archive `
-            -Path package\JavaZip `
-            -DestinationPath "JavaZip-$version.zip" `
-            -Force
-
-          Copy-Item "package\JavaZip\JavaZip.exe" "JavaZip.exe"
+          Copy-Item "package\JavaZip-$version.exe" "JavaZip-$version.exe"
 
       - name: Create GitHub Release
         shell: powershell
@@ -76,7 +75,6 @@ jobs:
           $version = $env:GITHUB_REF_NAME -replace '^v', ''
 
           gh release create "v$version" `
-            "JavaZip-$version.zip" `
-            "JavaZip.exe" `
+            "JavaZip-$version.exe" `
             --title "JavaZip $version" `
             --generate-notes
