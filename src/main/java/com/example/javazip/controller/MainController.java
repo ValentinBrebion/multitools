@@ -1,6 +1,7 @@
 package com.example.javazip.controller;
 
 import com.example.javazip.service.ZipService;
+import com.example.javazip.service.UpdateChecker;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
@@ -102,6 +103,81 @@ public class MainController {
             filesListView.getItems().remove(selectedIndex);
             updateStatus("Élément supprimé");
         }
+    }
+    
+    @FXML
+    private void handleUpdateCheck() {
+        updateStatus("Recherche de mises à jour...");
+        
+        Thread updateThread = new Thread(() -> {
+            UpdateChecker checker = new UpdateChecker();
+            UpdateChecker.UpdateInfo updateInfo = checker.checkForUpdates();
+            
+            javafx.application.Platform.runLater(() -> {
+                if (updateInfo.hasUpdate) {
+                    showUpdateDialog(updateInfo);
+                } else {
+                    showAlert("Mise à jour", "Vous utilisez déjà la dernière version de JavaZip (" + 
+                            UpdateChecker.getCurrentVersion() + ")");
+                    updateStatus("Aucune mise à jour disponible");
+                }
+            });
+        });
+        
+        updateThread.setDaemon(true);
+        updateThread.start();
+    }
+    
+    private void showUpdateDialog(UpdateChecker.UpdateInfo updateInfo) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Mise à jour disponible");
+        alert.setHeaderText("JavaZip " + updateInfo.latestVersion + " est disponible");
+        
+        String message = "Votre version: " + UpdateChecker.getCurrentVersion() + "\n" +
+                        "Nouvelle version: " + updateInfo.latestVersion + "\n\n";
+        
+        if (updateInfo.releaseNotes != null && !updateInfo.releaseNotes.isEmpty()) {
+            message += "Notes de version:\n" + updateInfo.releaseNotes + "\n\n";
+        }
+        
+        message += "Voulez-vous installer cette mise à jour ?";
+        
+        alert.setContentText(message);
+        
+        ButtonType installButton = new ButtonType("Installer", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButton = new ButtonType("Annuler", ButtonBar.ButtonData.CANCEL_CLOSE);
+        
+        alert.getButtonTypes().setAll(installButton, cancelButton);
+        
+        alert.showAndWait().ifPresent(response -> {
+            if (response == installButton) {
+                installUpdate(updateInfo);
+            }
+        });
+    }
+    
+    private void installUpdate(UpdateChecker.UpdateInfo updateInfo) {
+        updateStatus("Téléchargement de la mise à jour...");
+        
+        Thread downloadThread = new Thread(() -> {
+            try {
+                // Pour l'instant, on affiche juste un message
+                // Dans une étape future, on implémentera le téléchargement réel
+                javafx.application.Platform.runLater(() -> {
+                    showAlert("Information", "Le téléchargement sera implémenté dans la prochaine étape.\n" +
+                            "URL de téléchargement: " + updateInfo.downloadUrl);
+                    updateStatus("Mise à jour prête à être téléchargée");
+                });
+            } catch (Exception e) {
+                javafx.application.Platform.runLater(() -> {
+                    showAlert("Erreur", "Erreur lors du téléchargement: " + e.getMessage());
+                    updateStatus("Erreur lors de la mise à jour");
+                });
+            }
+        });
+        
+        downloadThread.setDaemon(true);
+        downloadThread.start();
     }
     
     private void updateStatus(String message) {

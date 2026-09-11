@@ -20,6 +20,8 @@
                 style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-pref-width: 120;"/>
         <Button text="Vider la liste" onAction="#handleClearList" 
                 style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-pref-width: 120;"/>
+        <Button text="🔄 Rechercher MAJ" onAction="#handleUpdateCheck" 
+                style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-pref-width: 150;"/>
     </HBox>
     
     <ListView fx:id="filesListView" VBox.vgrow="ALWAYS" 
