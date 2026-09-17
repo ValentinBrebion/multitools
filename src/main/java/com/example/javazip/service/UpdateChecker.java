@@ -13,7 +13,7 @@ import java.util.function.DoubleConsumer;
 
 public class UpdateChecker {
     
-    private static final String CURRENT_VERSION = "1.2.0";
+    private static final String FALLBACK_VERSION = "1.2.1";
     
     public static class UpdateInfo {
         public final boolean hasUpdate;
@@ -61,11 +61,11 @@ public class UpdateChecker {
                 }
             }
 
-            return new UpdateInfo(false, CURRENT_VERSION, null, null);
+            return new UpdateInfo(false, getCurrentVersion(), null, null);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new UpdateInfo(false, CURRENT_VERSION, null, null);
+            return new UpdateInfo(false, getCurrentVersion(), null, null);
         }
     }
     
@@ -120,7 +120,7 @@ public class UpdateChecker {
     
     private boolean isNewerVersion(String latestVersion) {
         try {
-            String current = CURRENT_VERSION.replace("v", "").replace("V", "");
+            String current = getCurrentVersion().replace("v", "").replace("V", "");
             String latest = latestVersion.replace("v", "").replace("V", "");
             
             String[] currentParts = current.split("\\.");
@@ -144,48 +144,51 @@ public class UpdateChecker {
     }
     
     public static String getCurrentVersion() {
-        return CURRENT_VERSION;
+        String version = UpdateChecker.class.getPackage().getImplementationVersion();
+        return (version != null) ? version : FALLBACK_VERSION;
     }
 
-     /**
+    /**
      * Télécharge le fichier de mise à jour vers un dossier temporaire.
      * onProgress reçoit une valeur entre 0.0 et 1.0 (ou -1 si la taille est inconnue).
      * Retourne le chemin du fichier téléchargé.
      */
     public Path downloadUpdate(String downloadUrl, DoubleConsumer onProgress) throws IOException, InterruptedException {
-        HttpClient client = HttpClient.newHttpClient();
- 
+        HttpClient client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
+
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(downloadUrl))
                 .header("User-Agent", "JavaZip")
                 .build();
- 
+
         HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
- 
+
         if (response.statusCode() != 200) {
             throw new IOException("Échec du téléchargement, code HTTP : " + response.statusCode());
         }
- 
+
         long totalBytes = response.headers().firstValueAsLong("Content-Length").orElse(-1);
- 
+
         String fileName = downloadUrl.substring(downloadUrl.lastIndexOf('/') + 1);
         if (fileName.isBlank()) {
             fileName = "JavaZip-update.exe";
         }
- 
+
         Path tempFile = Files.createTempDirectory("javazip-update").resolve(fileName);
- 
+
         try (InputStream in = response.body();
              OutputStream out = Files.newOutputStream(tempFile)) {
- 
+
             byte[] buffer = new byte[8192];
             long downloaded = 0;
             int len;
- 
+
             while ((len = in.read(buffer)) > 0) {
                 out.write(buffer, 0, len);
                 downloaded += len;
- 
+
                 if (onProgress != null) {
                     if (totalBytes > 0) {
                         onProgress.accept((double) downloaded / totalBytes);
@@ -195,10 +198,10 @@ public class UpdateChecker {
                 }
             }
         }
- 
+
         return tempFile;
     }
- 
+
     /**
      * Chemin de l'exécutable JavaZip actuellement lancé (le .exe portable).
      */
@@ -210,7 +213,7 @@ public class UpdateChecker {
                 .orElseThrow(() -> new IllegalStateException(
                         "Impossible de déterminer le chemin de l'exécutable courant."));
     }
- 
+
     /**
      * Génère un script Windows (.bat) qui, une fois JavaZip fermé :
      * remplace l'ancien .exe par le nouveau, relance l'appli, puis se supprime.
@@ -218,7 +221,7 @@ public class UpdateChecker {
      */
     public Path createUpdateScript(Path currentExe, Path newExe) throws IOException {
         Path scriptPath = Files.createTempFile("javazip-update", ".bat");
- 
+
         String script =
                 "@echo off\r\n" +
                 "chcp 65001 >nul\r\n" +
@@ -236,11 +239,11 @@ public class UpdateChecker {
                 "\r\n" +
                 "del \"%NEW%\" >nul 2>&1\r\n" +
                 "(goto) 2>nul & del \"%~f0\"\r\n";
- 
+
         Files.writeString(scriptPath, script);
         return scriptPath;
     }
- 
+
     /**
      * Lance le script de mise à jour en arrière-plan (détaché du process JavaZip),
      * puis ferme immédiatement l'application courante.
@@ -249,7 +252,7 @@ public class UpdateChecker {
         new ProcessBuilder("cmd.exe", "/c", scriptPath.toAbsolutePath().toString())
                 .directory(scriptPath.getParent().toFile())
                 .start();
- 
+
         javafx.application.Platform.exit();
         System.exit(0);
     }
