@@ -202,7 +202,7 @@ public class UpdateChecker {
         return tempFile;
     }
 
-    /**
+   /**
      * Chemin de l'exécutable JavaZip actuellement lancé (le .exe portable).
      */
     public static Path getCurrentExecutablePath() {
@@ -213,7 +213,7 @@ public class UpdateChecker {
                 .orElseThrow(() -> new IllegalStateException(
                         "Impossible de déterminer le chemin de l'exécutable courant."));
     }
-
+ 
     /**
      * Génère un script Windows (.bat) qui, une fois JavaZip fermé :
      * remplace l'ancien .exe par le nouveau, relance l'appli, puis se supprime.
@@ -221,29 +221,60 @@ public class UpdateChecker {
      */
     public Path createUpdateScript(Path currentExe, Path newExe) throws IOException {
         Path scriptPath = Files.createTempFile("javazip-update", ".bat");
-
+        Path logPath = scriptPath.resolveSibling("javazip-update.log");
+ 
         String script =
                 "@echo off\r\n" +
                 "chcp 65001 >nul\r\n" +
-                "setlocal\r\n" +
+                "setlocal enabledelayedexpansion\r\n" +
                 "set \"CURRENT=" + currentExe.toAbsolutePath() + "\"\r\n" +
                 "set \"NEW=" + newExe.toAbsolutePath() + "\"\r\n" +
+                "set \"LOG=" + logPath.toAbsolutePath() + "\"\r\n" +
+                "set \"IMG=" + currentExe.getFileName() + "\"\r\n" +
+                "set /a TRIES=0\r\n" +
+                "\r\n" +
+                "echo [%date% %time%] Script demarre > \"%LOG%\"\r\n" +
+                "echo CURRENT=%CURRENT% >> \"%LOG%\"\r\n" +
+                "echo NEW=%NEW% >> \"%LOG%\"\r\n" +
+                "echo IMG=%IMG% >> \"%LOG%\"\r\n" +
                 "\r\n" +
                 ":waitloop\r\n" +
+                "set /a TRIES+=1\r\n" +
                 "timeout /t 1 /nobreak >nul\r\n" +
-                "tasklist /fi \"imagename eq " + currentExe.getFileName() + "\" | find /i \"" + currentExe.getFileName() + "\" >nul\r\n" +
-                "if not errorlevel 1 goto waitloop\r\n" +
+                "tasklist /fi \"imagename eq %IMG%\" | find /i \"%IMG%\" >nul\r\n" +
+                "if !errorlevel! equ 0 (\r\n" +
+                "    echo [tentative !TRIES!] %IMG% tourne encore, on attend >> \"%LOG%\"\r\n" +
+                "    if !TRIES! lss 30 goto waitloop\r\n" +
+                "    echo [tentative !TRIES!] Abandon apres 30 tentatives, %IMG% semble toujours actif >> \"%LOG%\"\r\n" +
+                "    goto end\r\n" +
+                ")\r\n" +
+                "echo [tentative !TRIES!] %IMG% ne tourne plus, on procede au remplacement >> \"%LOG%\"\r\n" +
                 "\r\n" +
-                "copy /y \"%NEW%\" \"%CURRENT%\" >nul\r\n" +
+                "if not exist \"%NEW%\" (\r\n" +
+                "    echo ERREUR: le fichier source %NEW% n'existe pas >> \"%LOG%\"\r\n" +
+                "    goto end\r\n" +
+                ")\r\n" +
+                "\r\n" +
+                "copy /y \"%NEW%\" \"%CURRENT%\" >> \"%LOG%\" 2>&1\r\n" +
+                "if !errorlevel! neq 0 (\r\n" +
+                "    echo ERREUR: la copie a echoue avec le code !errorlevel! >> \"%LOG%\"\r\n" +
+                "    goto end\r\n" +
+                ")\r\n" +
+                "echo Copie reussie >> \"%LOG%\"\r\n" +
+                "\r\n" +
                 "start \"\" \"%CURRENT%\"\r\n" +
+                "echo Relance demandee >> \"%LOG%\"\r\n" +
                 "\r\n" +
                 "del \"%NEW%\" >nul 2>&1\r\n" +
+                "\r\n" +
+                ":end\r\n" +
+                "echo [%date% %time%] Script termine >> \"%LOG%\"\r\n" +
                 "(goto) 2>nul & del \"%~f0\"\r\n";
-
+ 
         Files.writeString(scriptPath, script);
         return scriptPath;
     }
-
+ 
     /**
      * Lance le script de mise à jour en arrière-plan (détaché du process JavaZip),
      * puis ferme immédiatement l'application courante.
@@ -252,7 +283,7 @@ public class UpdateChecker {
         new ProcessBuilder("cmd.exe", "/c", scriptPath.toAbsolutePath().toString())
                 .directory(scriptPath.getParent().toFile())
                 .start();
-
+ 
         javafx.application.Platform.exit();
         System.exit(0);
     }
