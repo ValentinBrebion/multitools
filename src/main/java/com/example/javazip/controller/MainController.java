@@ -4,8 +4,13 @@ import com.example.javazip.service.ZipService;
 import com.example.javazip.service.UpdateChecker;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.DirectoryChooser;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -17,26 +22,125 @@ public class MainController {
     
     @FXML
     private ListView<String> filesListView;
-    
+
+    @FXML
+    private VBox emptyState;
+
+    @FXML
+    private StackPane dropZone;
+
     @FXML
     private Label statusLabel;
-    
+
     @FXML
     private Label compressionRatioLabel;
+
+    @FXML
+    private Label versionLabel;
+
+    @FXML
+    private TextField archiveNameField;
+    
+    @FXML
+    private Button compressButton;
     
     private List<Path> selectedFiles = new ArrayList<>();
+
+    @FXML
+    public void initialize() {
+        versionLabel.setText("Version " + UpdateChecker.getCurrentVersion());
+
+        compressButton.setDisable(true);
+
+        dropZone.setOnMouseClicked(event -> {
+            if (event.getTarget() != filesListView) {
+                handleAddFiles();
+            }
+        });
+
+        dropZone.setOnDragOver(event -> {
+            if (event.getDragboard().hasFiles()) {
+                event.acceptTransferModes(TransferMode.COPY);
+            }
+            event.consume();
+        });
+
+        dropZone.setOnDragEntered(event -> {
+            if (event.getDragboard().hasFiles()) {
+                dropZone.setStyle(
+                    "-fx-background-color: #eef7ff;" +
+                    "-fx-border-color: #087edb;" +
+                    "-fx-border-radius: 10;" +
+                    "-fx-background-radius: 10;"
+                );
+            }
+            event.consume();
+        });
+
+        dropZone.setOnDragExited(event -> {
+            dropZone.setStyle(
+                "-fx-background-color: white;" +
+                "-fx-border-color: #cbd5df;" +
+                "-fx-border-radius: 10;" +
+                "-fx-background-radius: 10;"
+            );
+            event.consume();
+        });
+
+        dropZone.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+
+            if (db.hasFiles()) {
+                addDroppedFiles(db.getFiles());
+                event.setDropCompleted(true);
+            } else {
+                event.setDropCompleted(false);
+            }
+
+            event.consume();
+        });
+    }
+
+    private void addDroppedFiles(List<File> files) {
+        for (File file : files) {
+            selectedFiles.add(file.toPath());
+            filesListView.getItems().add(file.getName());
+        }
+
+        if (!files.isEmpty()) {
+            emptyState.setVisible(false);
+            emptyState.setManaged(false);
+
+            filesListView.setVisible(true);
+            filesListView.setManaged(true);
+
+            updateStatus(files.size() + " fichier(s) ajouté(s)");
+        }
+    }
     
     @FXML
     private void handleAddFiles() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Sélectionner des fichiers à compresser");
+
         List<File> files = fileChooser.showOpenMultipleDialog(null);
-        
+
         if (files != null) {
             for (File file : files) {
                 selectedFiles.add(file.toPath());
                 filesListView.getItems().add(file.getName());
             }
+
+            // Cacher le message d'accueil
+            emptyState.setVisible(false);
+            emptyState.setManaged(false);
+
+            // Afficher la liste
+            filesListView.setVisible(true);
+            filesListView.setManaged(true);
+
+            compressButton.setDisable(false);
+
             updateStatus(files.size() + " fichier(s) ajouté(s)");
         }
     }
@@ -45,12 +149,22 @@ public class MainController {
     private void handleAddDirectory() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Sélectionner un dossier à compresser");
+
         File directory = directoryChooser.showDialog(null);
-        
+
         if (directory != null) {
             selectedFiles.add(directory.toPath());
             filesListView.getItems().add("[Dossier] " + directory.getName());
-            updateStatus("Dossier ajouté: " + directory.getName());
+
+            emptyState.setVisible(false);
+            emptyState.setManaged(false);
+
+            filesListView.setVisible(true);
+            filesListView.setManaged(true);
+
+            compressButton.setDisable(false);
+
+            updateStatus("Dossier ajouté : " + directory.getName());
         }
     }
     
@@ -58,7 +172,17 @@ public class MainController {
     private void handleClearList() {
         selectedFiles.clear();
         filesListView.getItems().clear();
+
+        emptyState.setVisible(true);
+        emptyState.setManaged(true);
+
+        filesListView.setVisible(false);
+        filesListView.setManaged(false);
+
         compressionRatioLabel.setText("");
+
+        compressButton.setDisable(true);
+
         updateStatus("Liste vidée");
     }
     
@@ -74,6 +198,17 @@ public class MainController {
         fileChooser.getExtensionFilters().add(
             new FileChooser.ExtensionFilter("Fichier ZIP", "*.zip")
         );
+        String archiveName = archiveNameField.getText().trim();
+
+        if (archiveName.isEmpty()) {
+        archiveName = "archive";
+        }
+
+        if (!archiveName.toLowerCase().endsWith(".zip")) {
+            archiveName += ".zip";
+        }
+
+        fileChooser.setInitialFileName(archiveName);
         File zipFile = fileChooser.showSaveDialog(null);
         
         if (zipFile != null) {
@@ -98,9 +233,19 @@ public class MainController {
     @FXML
     private void handleRemoveSelected() {
         int selectedIndex = filesListView.getSelectionModel().getSelectedIndex();
+
         if (selectedIndex >= 0) {
             selectedFiles.remove(selectedIndex);
             filesListView.getItems().remove(selectedIndex);
+
+            if (filesListView.getItems().isEmpty()) {
+                emptyState.setVisible(true);
+                emptyState.setManaged(true);
+
+                filesListView.setVisible(false);
+                filesListView.setManaged(false);
+            }
+
             updateStatus("Élément supprimé");
         }
     }

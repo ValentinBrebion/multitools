@@ -1,42 +1,277 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="10" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
-      fx:controller="com.example.javazip.controller.MainController" 
-      style="-fx-background-color: #f5f5f5; -fx-padding: 20;">
-    
-    <Label text="JavaZip - Compresseur de fichiers" 
-           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-    
-    <HBox spacing="10" alignment="CENTER_LEFT">
-        <Button text="Ajouter fichiers" onAction="#handleAddFiles" 
-                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-pref-width: 120;"/>
-        <Button text="Ajouter dossier" onAction="#handleAddDirectory" 
-                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-pref-width: 120;"/>
-        <Button text="Supprimer sélection" onAction="#handleRemoveSelected" 
-                style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-pref-width: 120;"/>
-        <Button text="Vider la liste" onAction="#handleClearList" 
-                style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-pref-width: 120;"/>
-        <Button text="🔄 Rechercher MAJ" onAction="#handleUpdateCheck" 
-                style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-pref-width: 150;"/>
-    </HBox>
-    
-    <ListView fx:id="filesListView" VBox.vgrow="ALWAYS" 
-              style="-fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-background-color: white;"/>
-    
-    <HBox spacing="10" alignment="CENTER">
-        <Button text="Compresser" onAction="#handleCompress" 
-                style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-pref-width: 150; -fx-pref-height: 40;"/>
-    </HBox>
-    
-    <VBox spacing="5">
-        <Label fx:id="statusLabel" text="Prêt" 
-               style="-fx-text-fill: #7f8c8d; -fx-font-style: italic;"/>
-        <Label fx:id="compressionRatioLabel" text="" 
-               style="-fx-text-fill: #27ae60; -fx-font-weight: bold;"/>
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.javazip.controller.MainController"
+            stylesheets="@style.css"
+    styleClass="root">
+
+    <!-- ==================== HEADER ==================== -->
+
+    <top>
+        <HBox alignment="CENTER_LEFT"
+                spacing="12"
+                prefHeight="82"
+                style="-fx-background-color: #f5f7f9;
+                        -fx-border-color: #cbd5df;
+                        -fx-border-width: 0 0 1 0;
+                        -fx-padding: 0 20 0 20;">
+
+                <Label text="📦"
+       style="-fx-font-family: 'Segoe UI Emoji';
+              -fx-font-size: 20px;"/>
+
+                <VBox spacing="2">
+                        <Label text="JavaZip"
+                        style="-fx-font-size: 20px;
+                                -fx-font-weight: bold;
+                                -fx-text-fill: #111827;"/>
+
+                        <Label text="Compresseur de fichiers"
+                        style="-fx-font-size: 14px;
+                                -fx-text-fill: #64748b;"/>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <VBox alignment="CENTER_RIGHT"
+                        spacing="2">
+                        <Button text="↻  Mises à jour"
+                                onAction="#handleUpdateCheck"
+                                style="-fx-background-color: transparent;
+                                -fx-text-fill: #111827;
+                                -fx-font-size: 14px;
+                                -fx-cursor: hand;"/>
+
+                        <Label fx:id="versionLabel"
+                        text="Version 1.0.0"
+                        style="-fx-text-fill: #64748b;
+                                -fx-font-size: 11px;"/>
+                </VBox>
+
+                </HBox>
+    </top>
+
+
+    <!-- ==================== CONTENU ==================== -->
+
+    <center>
+        <VBox spacing="14"
+              style="-fx-padding: 20;">
+
+            <!-- Boutons -->
+            <HBox spacing="10"
+                  alignment="CENTER_LEFT">
+
+                <Button text="📄  Ajouter des fichiers"
+                        onAction="#handleAddFiles"
+                        prefHeight="45"
+                        style="-fx-background-color: #087edb;
+                               -fx-text-fill: white;
+                               -fx-font-size: 16px;
+                               -fx-font-weight: bold;
+                               -fx-background-radius: 7;
+                               -fx-padding: 0 20 0 20;
+                               -fx-cursor: hand;"/>
+
+                <Button text="📁​  Ajouter un dossier"
+                        onAction="#handleAddDirectory"
+                        prefHeight="45"
+                        style="-fx-background-color: white;
+                               -fx-text-fill: #1e293b;
+                               -fx-font-size: 16px;
+                               -fx-border-color: #b9c6d3;
+                               -fx-border-radius: 7;
+                               -fx-background-radius: 7;
+                               -fx-padding: 0 20 0 20;
+                               -fx-cursor: hand;"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <Button text="🗑 Vider la liste"
+                        onAction="#handleClearList"
+                        style="-fx-background-color: transparent;
+                               -fx-text-fill: #64748b;
+                               -fx-font-size: 15px;
+                               -fx-cursor: hand;"/>
+            </HBox>
+
+
+            <!-- Zone fichiers -->
+            <!-- ==================== ZONE FICHIERS ==================== -->
+
+<StackPane fx:id="dropZone"
+           VBox.vgrow="ALWAYS"
+           minHeight="0"
+           style="-fx-background-color: #fafbfc;
+                  -fx-border-color: #cbd5df;
+                  -fx-border-width: 1;
+                  -fx-border-radius: 10;
+                  -fx-background-radius: 10;
+                  -fx-cursor: hand;">
+
+    <!-- État vide -->
+    <VBox fx:id="emptyState"
+          alignment="CENTER"
+          spacing="8">
+
+        <!-- Petite icône -->
+        <Label text="⇧"
+               style="-fx-text-fill: #087edb;
+                      -fx-font-size: 26px;
+                      -fx-font-weight: bold;"/>
+
+        <!-- Titre -->
+        <Label text="Déposez vos fichiers ici"
+               style="-fx-font-size: 17px;
+                      -fx-font-weight: bold;
+                      -fx-text-fill: #1e293b;"/>
+
+        <!-- Sous-titre -->
+        <Label text="ou cliquez pour parcourir vos fichiers"
+               style="-fx-font-size: 14px;
+                      -fx-text-fill: #64748b;"/>
+
+        <!-- Formats acceptés -->
+        <Label text="Tous les formats sont acceptés"
+               style="-fx-font-size: 12px;
+                      -fx-text-fill: #94a3b8;"/>
     </VBox>
-    
-</VBox>
+
+    <!-- Liste des fichiers -->
+    <ListView fx:id="filesListView"
+              visible="false"
+              managed="false"
+              style="-fx-background-color: transparent;
+                     -fx-background-radius: 10;
+                     -fx-border-radius: 10;"/>
+
+</StackPane>
+
+
+            <!-- ==================== OPTIONS ==================== -->
+
+            <HBox spacing="20"
+                  alignment="CENTER_LEFT"
+                  style="-fx-background-color: #edf3f8;
+                         -fx-border-color: #cbd5df;
+                         -fx-border-radius: 10;
+                         -fx-background-radius: 10;
+                         -fx-padding: 15;">
+
+                <!-- Nom archive -->
+                <VBox spacing="6"
+                      HBox.hgrow="ALWAYS">
+
+                    <Label text="Nom de l’archive"
+                           style="-fx-font-size: 14px;
+                                  -fx-text-fill: #52677d;"/>
+
+                    <TextField fx:id="archiveNameField" text="archive"
+                               prefHeight="47"
+                               style="-fx-background-color: white;
+                                      -fx-border-color: #b9c6d3;
+                                      -fx-border-radius: 8;
+                                      -fx-background-radius: 8;
+                                      -fx-font-size: 16px;"/>
+                </VBox>
+
+
+                <!-- Extension -->
+                <VBox alignment="BOTTOM_LEFT"
+                      prefWidth="45">
+
+                    <Label text=".zip"
+                           style="-fx-font-size: 15px;
+                                  -fx-text-fill: #52677d;"/>
+                </VBox>
+
+
+                <!-- Compression -->
+                <VBox spacing="6">
+
+                    <Label text="Compression"
+                           style="-fx-font-size: 14px;
+                                  -fx-text-fill: #52677d;"/>
+
+                    <HBox spacing="0"
+                          style="-fx-background-color: #e8edf2;
+                                 -fx-background-radius: 8;
+                                 -fx-padding: 4;">
+
+                        <Button text="Rapide"
+                                prefHeight="36"
+                                style="-fx-background-color: transparent;
+                                       -fx-text-fill: #52677d;
+                                       -fx-background-radius: 6;"/>
+
+                        <Button text="Standard"
+                                prefHeight="36"
+                                style="-fx-background-color: white;
+                                       -fx-text-fill: #111827;
+                                       -fx-font-weight: bold;
+                                       -fx-background-radius: 6;"/>
+
+                        <Button text="Maximale"
+                                prefHeight="36"
+                                style="-fx-background-color: transparent;
+                                       -fx-text-fill: #52677d;
+                                       -fx-background-radius: 6;"/>
+                    </HBox>
+                </VBox>
+
+            </HBox>
+
+        </VBox>
+    </center>
+
+
+    <!-- ==================== FOOTER ==================== -->
+
+    <bottom>
+        <HBox alignment="CENTER_LEFT"
+              spacing="20"
+              prefHeight="80"
+              style="-fx-background-color: #f5f7f9;
+                     -fx-border-color: #cbd5df;
+                     -fx-border-width: 1 0 0 0;
+                     -fx-padding: 10 20 10 20;">
+
+            <!-- Statut -->
+            <VBox spacing="4">
+
+                <Label fx:id="statusLabel"
+                       text="Prêt"
+                       style="-fx-font-size: 15px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #334155;"/>
+
+                <Label fx:id="compressionRatioLabel"
+                       text="Aucun fichier sélectionné"
+                       style="-fx-font-size: 14px;
+                              -fx-text-fill: #64748b;"/>
+            </VBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Bouton compresser -->
+            <Button fx:id="compressButton" text="Compresser"
+                    onAction="#handleCompress"
+                    prefWidth="210"
+                    prefHeight="50"
+                    style="-fx-background-color: #22a06b;
+                           -fx-text-fill: white;
+                           -fx-font-size: 17px;
+                           -fx-font-weight: bold;
+                           -fx-background-radius: 9;
+                           -fx-cursor: hand;"/>
+
+        </HBox>
+    </bottom>
+
+</BorderPane>

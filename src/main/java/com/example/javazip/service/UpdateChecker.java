@@ -9,7 +9,7 @@ import java.net.URL;
 public class UpdateChecker {
     
     private static final String GITHUB_API_URL = "https://api.github.com/repos/ValentinBrebion/JavaZip/releases/latest";
-    private static final String CURRENT_VERSION = "1.0.0";
+    private static final String CURRENT_VERSION = "1.2.0";
     
     public static class UpdateInfo {
         public final boolean hasUpdate;
