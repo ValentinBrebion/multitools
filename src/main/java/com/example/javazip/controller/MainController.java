@@ -3,10 +3,14 @@ package com.example.javazip.controller;
 import com.example.javazip.service.ZipService;
 import com.example.javazip.service.UpdateChecker;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.scene.Scene;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.StackPane;
@@ -285,11 +289,11 @@ public class MainController {
             message += "Notes de version:\n" + updateInfo.releaseNotes + "\n\n";
         }
         
-        message += "Voulez-vous installer cette mise à jour ?";
+        message += "Voulez-vous télécharger et installer cette mise à jour maintenant ?";
         
         alert.setContentText(message);
         
-        ButtonType installButton = new ButtonType("Installer", ButtonBar.ButtonData.OK_DONE);
+        ButtonType installButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         ButtonType cancelButton = new ButtonType("Annuler", ButtonBar.ButtonData.CANCEL_CLOSE);
         
         alert.getButtonTypes().setAll(installButton, cancelButton);
@@ -300,27 +304,73 @@ public class MainController {
             }
         });
     }
-    
+
+    /**
+     * Télécharge le nouvel exécutable avec une popup de progression, puis
+     * déclenche le remplacement + relance de l'application.
+     */
     private void installUpdate(UpdateChecker.UpdateInfo updateInfo) {
+        if (updateInfo.downloadUrl == null) {
+            showAlert("Erreur", "Aucun lien de téléchargement disponible pour cette version.");
+            return;
+        }
+
+        // Popup de progression
+        Stage progressStage = new Stage();
+        progressStage.initModality(Modality.APPLICATION_MODAL);
+        progressStage.setTitle("Téléchargement de la mise à jour");
+        progressStage.setResizable(false);
+
+        Label progressLabel = new Label("Téléchargement en cours...");
+        ProgressBar progressBar = new ProgressBar(0);
+        progressBar.setPrefWidth(320);
+
+        VBox progressBox = new VBox(12, progressLabel, progressBar);
+        progressBox.setPadding(new Insets(20));
+
+        progressStage.setScene(new Scene(progressBox));
+        progressStage.show();
+
         updateStatus("Téléchargement de la mise à jour...");
-        
+
         Thread downloadThread = new Thread(() -> {
+            UpdateChecker checker = new UpdateChecker();
+
             try {
-                // Pour l'instant, on affiche juste un message
-                // Dans une étape future, on implémentera le téléchargement réel
-                javafx.application.Platform.runLater(() -> {
-                    showAlert("Information", "Le téléchargement sera implémenté dans la prochaine étape.\n" +
-                            "URL de téléchargement: " + updateInfo.downloadUrl);
-                    updateStatus("Mise à jour prête à être téléchargée");
+                Path downloadedFile = checker.downloadUpdate(updateInfo.downloadUrl, progress -> {
+                    javafx.application.Platform.runLater(() -> {
+                        if (progress < 0) {
+                            progressBar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
+                        } else {
+                            progressBar.setProgress(progress);
+                            progressLabel.setText("Téléchargement en cours... " + (int) (progress * 100) + "%");
+                        }
+                    });
                 });
-            } catch (Exception e) {
+
+                Path currentExe = UpdateChecker.getCurrentExecutablePath();
+                Path updateScript = checker.createUpdateScript(currentExe, downloadedFile);
+
                 javafx.application.Platform.runLater(() -> {
-                    showAlert("Erreur", "Erreur lors du téléchargement: " + e.getMessage());
+                    progressStage.close();
+                    updateStatus("Redémarrage pour terminer la mise à jour...");
+                });
+
+                // Laisse le temps à l'UI de se fermer proprement avant de tuer le process
+                Thread.sleep(300);
+
+                UpdateChecker.runUpdateScriptAndExit(updateScript);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                javafx.application.Platform.runLater(() -> {
+                    progressStage.close();
+                    showAlert("Erreur", "Erreur lors du téléchargement de la mise à jour: " + e.getMessage());
                     updateStatus("Erreur lors de la mise à jour");
                 });
             }
         });
-        
+
         downloadThread.setDaemon(true);
         downloadThread.start();
     }

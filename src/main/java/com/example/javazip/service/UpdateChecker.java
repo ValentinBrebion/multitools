@@ -1,14 +1,18 @@
 package com.example.javazip.service;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
-import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.function.DoubleConsumer;
 
 public class UpdateChecker {
     
-    private static final String GITHUB_API_URL = "https://api.github.com/repos/ValentinBrebion/JavaZip/releases/latest";
     private static final String CURRENT_VERSION = "1.2.0";
     
     public static class UpdateInfo {
@@ -27,33 +31,38 @@ public class UpdateChecker {
     
     public UpdateInfo checkForUpdates() {
         try {
-            URL url = URI.create(GITHUB_API_URL).toURL();
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("User-Agent", "JavaZip");
-            
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-                reader.close();
-                
-                String jsonResponse = response.toString();
+            HttpClient client = HttpClient.newHttpClient();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(
+                            "https://api.github.com/repos/ValentinBrebion/multitools/releases/latest"
+                    ))
+                    .header("User-Agent", "JavaZip")
+                    .build();
+
+            HttpResponse<String> response =
+                    client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+
+                String jsonResponse = response.body();
+
                 String latestVersion = extractJsonValue(jsonResponse, "tag_name");
                 String downloadUrl = extractZipDownloadUrl(jsonResponse);
                 String releaseNotes = extractJsonValue(jsonResponse, "body");
-                
+
                 if (latestVersion != null && isNewerVersion(latestVersion)) {
-                    return new UpdateInfo(true, latestVersion, downloadUrl, releaseNotes);
+                    return new UpdateInfo(
+                            true,
+                            latestVersion,
+                            downloadUrl,
+                            releaseNotes
+                    );
                 }
             }
-            
+
             return new UpdateInfo(false, CURRENT_VERSION, null, null);
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             return new UpdateInfo(false, CURRENT_VERSION, null, null);
@@ -62,17 +71,25 @@ public class UpdateChecker {
     
     private String extractZipDownloadUrl(String jsonResponse) {
         try {
-            int assetsIndex = jsonResponse.indexOf("\"assets\"");
-            if (assetsIndex == -1) return null;
-            
-            int browserDownloadUrlIndex = jsonResponse.indexOf("\"browser_download_url\"", assetsIndex);
-            if (browserDownloadUrlIndex == -1) return null;
-            
-            int urlStart = jsonResponse.indexOf("\"", browserDownloadUrlIndex + 24) + 1;
-            int urlEnd = jsonResponse.indexOf("\"", urlStart);
-            
-            return jsonResponse.substring(urlStart, urlEnd);
+            String key = "\"browser_download_url\":\"";
+
+            int start = jsonResponse.indexOf(key);
+
+            if (start == -1) {
+                return null;
+            }
+
+            start += key.length();
+
+            int end = jsonResponse.indexOf("\"", start);
+
+            if (end == -1) {
+                return null;
+            }
+            return jsonResponse.substring(start, end);
+
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
@@ -128,5 +145,112 @@ public class UpdateChecker {
     
     public static String getCurrentVersion() {
         return CURRENT_VERSION;
+    }
+
+     /**
+     * Télécharge le fichier de mise à jour vers un dossier temporaire.
+     * onProgress reçoit une valeur entre 0.0 et 1.0 (ou -1 si la taille est inconnue).
+     * Retourne le chemin du fichier téléchargé.
+     */
+    public Path downloadUpdate(String downloadUrl, DoubleConsumer onProgress) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+ 
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(downloadUrl))
+                .header("User-Agent", "JavaZip")
+                .build();
+ 
+        HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+ 
+        if (response.statusCode() != 200) {
+            throw new IOException("Échec du téléchargement, code HTTP : " + response.statusCode());
+        }
+ 
+        long totalBytes = response.headers().firstValueAsLong("Content-Length").orElse(-1);
+ 
+        String fileName = downloadUrl.substring(downloadUrl.lastIndexOf('/') + 1);
+        if (fileName.isBlank()) {
+            fileName = "JavaZip-update.exe";
+        }
+ 
+        Path tempFile = Files.createTempDirectory("javazip-update").resolve(fileName);
+ 
+        try (InputStream in = response.body();
+             OutputStream out = Files.newOutputStream(tempFile)) {
+ 
+            byte[] buffer = new byte[8192];
+            long downloaded = 0;
+            int len;
+ 
+            while ((len = in.read(buffer)) > 0) {
+                out.write(buffer, 0, len);
+                downloaded += len;
+ 
+                if (onProgress != null) {
+                    if (totalBytes > 0) {
+                        onProgress.accept((double) downloaded / totalBytes);
+                    } else {
+                        onProgress.accept(-1);
+                    }
+                }
+            }
+        }
+ 
+        return tempFile;
+    }
+ 
+    /**
+     * Chemin de l'exécutable JavaZip actuellement lancé (le .exe portable).
+     */
+    public static Path getCurrentExecutablePath() {
+        return ProcessHandle.current()
+                .info()
+                .command()
+                .map(Path::of)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Impossible de déterminer le chemin de l'exécutable courant."));
+    }
+ 
+    /**
+     * Génère un script Windows (.bat) qui, une fois JavaZip fermé :
+     * remplace l'ancien .exe par le nouveau, relance l'appli, puis se supprime.
+     * Retourne le chemin du script généré.
+     */
+    public Path createUpdateScript(Path currentExe, Path newExe) throws IOException {
+        Path scriptPath = Files.createTempFile("javazip-update", ".bat");
+ 
+        String script =
+                "@echo off\r\n" +
+                "chcp 65001 >nul\r\n" +
+                "setlocal\r\n" +
+                "set \"CURRENT=" + currentExe.toAbsolutePath() + "\"\r\n" +
+                "set \"NEW=" + newExe.toAbsolutePath() + "\"\r\n" +
+                "\r\n" +
+                ":waitloop\r\n" +
+                "timeout /t 1 /nobreak >nul\r\n" +
+                "tasklist /fi \"imagename eq " + currentExe.getFileName() + "\" | find /i \"" + currentExe.getFileName() + "\" >nul\r\n" +
+                "if not errorlevel 1 goto waitloop\r\n" +
+                "\r\n" +
+                "copy /y \"%NEW%\" \"%CURRENT%\" >nul\r\n" +
+                "start \"\" \"%CURRENT%\"\r\n" +
+                "\r\n" +
+                "del \"%NEW%\" >nul 2>&1\r\n" +
+                "(goto) 2>nul & del \"%~f0\"\r\n";
+ 
+        Files.writeString(scriptPath, script);
+        return scriptPath;
+    }
+ 
+    /**
+     * Lance le script de mise à jour en arrière-plan (détaché du process JavaZip),
+     * puis ferme immédiatement l'application courante.
+     */
+    public static void runUpdateScriptAndExit(Path scriptPath) throws IOException {
+        new ProcessBuilder("cmd.exe", "/c", scriptPath.toAbsolutePath().toString())
+                .directory(scriptPath.getParent().toFile())
+                .start();
+ 
+        javafx.application.Platform.exit();
+        System.exit(0);
     }
 }
