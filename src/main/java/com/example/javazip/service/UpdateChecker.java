@@ -280,10 +280,13 @@ public class UpdateChecker {
      * puis ferme immédiatement l'application courante.
      */
     public static void runUpdateScriptAndExit(Path scriptPath) throws IOException {
-        new ProcessBuilder("cmd.exe", "/c", scriptPath.toAbsolutePath().toString())
+        new ProcessBuilder(
+                "cmd.exe", "/c", "start", "\"\"", "/min",
+                "cmd.exe", "/c", scriptPath.toAbsolutePath().toString()
+        )
                 .directory(scriptPath.getParent().toFile())
                 .start();
- 
+
         javafx.application.Platform.exit();
         System.exit(0);
     }
