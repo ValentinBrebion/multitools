@@ -35,8 +35,10 @@ jobs:
       - name: Prepare application
         shell: powershell
         run: |
+          $version = $env:GITHUB_REF_NAME -replace '^v', ''
+
           New-Item -ItemType Directory -Force -Path target\app
-          Copy-Item target\javazip-1.0.0.jar target\app\
+          Copy-Item target\javazip-$version.jar target\app\
           mvn dependency:copy-dependencies -DoutputDirectory=target/app -DincludeScope=runtime
 
           Remove-Item target\app\javafx-base-21.0.6.jar -ErrorAction SilentlyContinue
@@ -55,7 +57,7 @@ jobs:
             --type exe `
             --name JavaZip `
             --input target\app `
-            --main-jar javazip-1.0.0.jar `
+            --main-jar "javazip-$version.jar" `
             --main-class com.example.javazip.JavaZipApp `
             --dest package `
             --app-version $version `
@@ -83,4 +85,5 @@ jobs:
           gh release create "v$version" `
             "JavaZip-$version.exe" `
             --title "JavaZip $version" `
+            --generate-notes
             --generate-notes
