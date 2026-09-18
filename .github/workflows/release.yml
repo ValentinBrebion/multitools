@@ -27,14 +27,10 @@ jobs:
         shell: powershell
         run: |
           $version = $env:GITHUB_REF_NAME -replace '^v', ''
-          mvn --batch-mode versions:set -DnewVersion=$version -DgenerateBackupPoms=false
+          mvn --batch-mode versions:set "-DnewVersion=$($version)" -DgenerateBackupPoms=false
 
       - name: Build with Maven
         run: mvn --batch-mode clean package
-
-      - name: List target directory
-        shell: powershell
-        run: Get-ChildItem target\*.jar
 
       - name: Prepare application
         shell: powershell
