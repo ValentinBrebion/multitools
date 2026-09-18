@@ -9,6 +9,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Properties;
 import java.util.function.DoubleConsumer;
 
 public class UpdateChecker {
@@ -144,8 +145,19 @@ public class UpdateChecker {
     }
     
     public static String getCurrentVersion() {
-        String version = UpdateChecker.class.getPackage().getImplementationVersion();
-        return (version != null) ? version : FALLBACK_VERSION;
+        try (InputStream is = UpdateChecker.class.getResourceAsStream("/version.properties")) {
+            if (is != null) {
+                Properties props = new Properties();
+                props.load(is);
+                String version = props.getProperty("version");
+                if (version != null && !version.isBlank()) {
+                    return version;
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Impossible de lire version.properties: " + e.getMessage());
+        }
+        return FALLBACK_VERSION;
     }
 
     /**

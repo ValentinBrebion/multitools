@@ -9,7 +9,7 @@
 
     <groupId>com.example</groupId>
     <artifactId>javazip</artifactId>
-    <version>1.0.0</version>
+    <version>1.2.5</version>
 
     <name>JavaZip</name>
     <description>Application de compression ZIP avec JavaFX</description>
@@ -40,6 +40,12 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
 
             <plugin>
