@@ -23,7 +23,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
       
-       - name: Set project version from tag
+      - name: Set project version from tag
         shell: powershell
         run: |
           $version = $env:GITHUB_REF_NAME -replace '^v', ''
