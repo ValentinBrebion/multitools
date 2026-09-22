@@ -1,4 +1,4 @@
-package com.example.javazip.service;
+package com.example.multitools.tools.compression;
 
 import java.io.*;
 import java.nio.file.*;
@@ -94,4 +94,3 @@ public class ZipService {
         return size;
     }
 }
-

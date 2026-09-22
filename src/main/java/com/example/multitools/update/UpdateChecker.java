@@ -1,4 +1,4 @@
-package com.example.javazip.service;
+package com.example.multitools.update;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +14,7 @@ import java.util.function.DoubleConsumer;
 
 public class UpdateChecker {
     
-    private static final String FALLBACK_VERSION = "1.2.1";
+    private static final String FALLBACK_VERSION = "1.2.0";
     
     public static class UpdateInfo {
         public final boolean hasUpdate;
@@ -38,7 +38,7 @@ public class UpdateChecker {
                     .uri(URI.create(
                             "https://api.github.com/repos/ValentinBrebion/multitools/releases/latest"
                     ))
-                    .header("User-Agent", "JavaZip")
+                    .header("User-Agent", "Multitools")
                     .build();
 
             HttpResponse<String> response =
@@ -172,7 +172,7 @@ public class UpdateChecker {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(downloadUrl))
-                .header("User-Agent", "JavaZip")
+                .header("User-Agent", "Multitools")
                 .build();
 
         HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
@@ -185,10 +185,10 @@ public class UpdateChecker {
 
         String fileName = downloadUrl.substring(downloadUrl.lastIndexOf('/') + 1);
         if (fileName.isBlank()) {
-            fileName = "JavaZip-update.exe";
+            fileName = "Multitools-update.exe";
         }
 
-        Path tempFile = Files.createTempDirectory("javazip-update").resolve(fileName);
+        Path tempFile = Files.createTempDirectory("multitools-update").resolve(fileName);
 
         try (InputStream in = response.body();
              OutputStream out = Files.newOutputStream(tempFile)) {
@@ -215,7 +215,7 @@ public class UpdateChecker {
     }
 
    /**
-     * Chemin de l'exécutable JavaZip actuellement lancé (le .exe portable).
+     * Chemin de l'exécutable Multitools actuellement lancé (le .exe portable).
      */
     public static Path getCurrentExecutablePath() {
         return ProcessHandle.current()
@@ -227,13 +227,13 @@ public class UpdateChecker {
     }
  
     /**
-     * Génère un script Windows (.bat) qui, une fois JavaZip fermé :
+     * Génère un script Windows (.bat) qui, une fois Multitools fermé :
      * remplace l'ancien .exe par le nouveau, relance l'appli, puis se supprime.
      * Retourne le chemin du script généré.
      */
     public Path createUpdateScript(Path currentExe, Path newExe) throws IOException {
-        Path scriptPath = Files.createTempFile("javazip-update", ".bat");
-        Path logPath = scriptPath.resolveSibling("javazip-update.log");
+        Path scriptPath = Files.createTempFile("multitools-update", ".bat");
+        Path logPath = scriptPath.resolveSibling("multitools-update.log");
  
         String script =
                 "@echo off\r\n" +
@@ -288,7 +288,7 @@ public class UpdateChecker {
     }
  
     /**
-     * Lance le script de mise à jour en arrière-plan (détaché du process JavaZip),
+     * Lance le script de mise à jour en arrière-plan (détaché du process Multitools),
      * puis ferme immédiatement l'application courante.
      */
     public static void runUpdateScriptAndExit(Path scriptPath) throws IOException {

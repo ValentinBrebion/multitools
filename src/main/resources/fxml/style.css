@@ -17,3 +17,36 @@
     -fx-border-radius: 7px;
     -fx-background-radius: 7px;
 }
+
+/* Styles pour les cartes d'outils */
+.tool-card {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 24;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 12, 0, 0, 4);
+    -fx-transition: all 0.2s ease;
+}
+
+.tool-card:hover {
+    -fx-border-color: #087edb;
+    -fx-effect: dropshadow(gaussian, rgba(8,126,219,0.15), 16, 0, 0, 6);
+    -fx-cursor: hand;
+}
+
+/* Styles pour les cartes non disponibles (floutées) */
+.tool-card.disabled {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #e2e8f0;
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.03), 6, 0, 0, 1);
+}
+
+.tool-card.disabled:hover {
+    -fx-border-color: #e2e8f0;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.03), 6, 0, 0, 1);
+    -fx-cursor: default;
+}

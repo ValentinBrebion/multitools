@@ -1,9 +1,11 @@
-package com.example.javazip.controller;
+package com.example.multitools.tools.compression;
 
-import com.example.javazip.service.ZipService;
-import com.example.javazip.service.UpdateChecker;
+import com.example.multitools.core.NavigationManager;
+import com.example.multitools.update.UpdateChecker;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -22,7 +24,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainController {
+public class CompressionController {
     
     @FXML
     private ListView<String> filesListView;
@@ -266,7 +268,7 @@ public class MainController {
                 if (updateInfo.hasUpdate) {
                     showUpdateDialog(updateInfo);
                 } else {
-                    showAlert("Mise à jour", "Vous utilisez déjà la dernière version de JavaZip (" + 
+                    showAlert("Mise à jour", "Vous utilisez déjà la dernière version de Multitools (" + 
                             UpdateChecker.getCurrentVersion() + ")");
                     updateStatus("Aucune mise à jour disponible");
                 }
@@ -280,7 +282,7 @@ public class MainController {
     private void showUpdateDialog(UpdateChecker.UpdateInfo updateInfo) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Mise à jour disponible");
-        alert.setHeaderText("JavaZip " + updateInfo.latestVersion + " est disponible");
+        alert.setHeaderText("Multitools " + updateInfo.latestVersion + " est disponible");
         
         String message = "Votre version: " + UpdateChecker.getCurrentVersion() + "\n" +
                         "Nouvelle version: " + updateInfo.latestVersion + "\n\n";
@@ -377,6 +379,26 @@ public class MainController {
     
     private void updateStatus(String message) {
         statusLabel.setText(message);
+    }
+    
+    @FXML
+    private void handleBack() {
+        try {
+            // Revenir au menu principal
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/main.fxml")
+            );
+            loader.setControllerFactory(param -> new com.example.multitools.MainController());
+            
+            Parent root = loader.load();
+            
+            // Naviguer vers le menu principal
+            NavigationManager.getInstance().navigateTo(root);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Erreur", "Impossible de revenir au menu principal: " + e.getMessage());
+        }
     }
     
     private void showAlert(String title, String message) {
