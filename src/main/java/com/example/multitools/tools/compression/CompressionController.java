@@ -350,8 +350,18 @@ public class CompressionController {
                     });
                 });
 
-                Path currentExe = UpdateChecker.getCurrentExecutablePath();
-                Path updateScript = checker.createUpdateScript(currentExe, downloadedFile);
+                String currentExe = UpdateChecker.getCurrentExecutablePath();
+                
+                // Si c'est une URL GitHub (mode développement), on ne peut pas faire la mise à jour automatique
+                if (currentExe.startsWith("http")) {
+                    javafx.application.Platform.runLater(() -> {
+                        progressStage.close();
+                        showAlert("Information", "Mise à jour téléchargée. En mode développement, l'installation automatique n'est pas disponible. Veuillez remplacer manuellement l'exécutable.");
+                    });
+                    return;
+                }
+                
+                Path updateScript = checker.createUpdateScript(Path.of(currentExe), downloadedFile);
 
                 javafx.application.Platform.runLater(() -> {
                     progressStage.close();

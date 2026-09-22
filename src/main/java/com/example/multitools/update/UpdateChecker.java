@@ -216,14 +216,61 @@ public class UpdateChecker {
 
    /**
      * Chemin de l'exécutable Multitools actuellement lancé (le .exe portable).
+     * Si impossible à déterminer (mode développement), récupère l'URL du dernier exécutable GitHub.
      */
-    public static Path getCurrentExecutablePath() {
-        return ProcessHandle.current()
+    public static String getCurrentExecutablePath() {
+        // Essayer d'abord de récupérer le chemin local
+        Path localPath = ProcessHandle.current()
                 .info()
                 .command()
                 .map(Path::of)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Impossible de déterminer le chemin de l'exécutable courant."));
+                .orElse(null);
+        
+        if (localPath != null) {
+            return localPath.toString();
+        }
+        
+        // En mode développement, récupérer l'URL du dernier exécutable GitHub
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.github.com/repos/ValentinBrebion/multitools/releases/latest"))
+                    .header("User-Agent", "Multitools")
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                String jsonResponse = response.body();
+                
+                // Parser la réponse JSON comme dans le code JavaScript
+                String assetsKey = "\"assets\":[";
+                int assetsIndex = jsonResponse.indexOf(assetsKey);
+                
+                if (assetsIndex != -1) {
+                    // Trouver le premier asset
+                    int assetsStart = assetsIndex + assetsKey.length();
+                    String firstAsset = jsonResponse.substring(assetsStart);
+                    
+                    // Extraire browser_download_url du premier asset
+                    String downloadUrlKey = "\"browser_download_url\":\"";
+                    int downloadUrlIndex = firstAsset.indexOf(downloadUrlKey);
+                    
+                    if (downloadUrlIndex != -1) {
+                        int urlStart = downloadUrlIndex + downloadUrlKey.length();
+                        int urlEnd = firstAsset.indexOf("\"", urlStart);
+                        
+                        if (urlEnd != -1) {
+                            return firstAsset.substring(urlStart, urlEnd);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        throw new IllegalStateException("Impossible de déterminer le chemin de l'exécutable ou de récupérer l'URL GitHub.");
     }
  
     /**
