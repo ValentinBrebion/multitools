@@ -1,40 +1,150 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
 
-<VBox spacing="10" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
-      fx:controller="com.example.javazip.controller.MainController" 
-      style="-fx-background-color: #f5f5f5; -fx-padding: 20;">
-    
-    <Label text="JavaZip - Compresseur de fichiers" 
-           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-    
-    <HBox spacing="10" alignment="CENTER_LEFT">
-        <Button text="Ajouter fichiers" onAction="#handleAddFiles" 
-                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-pref-width: 120;"/>
-        <Button text="Ajouter dossier" onAction="#handleAddDirectory" 
-                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-pref-width: 120;"/>
-        <Button text="Supprimer sélection" onAction="#handleRemoveSelected" 
-                style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-pref-width: 120;"/>
-        <Button text="Vider la liste" onAction="#handleClearList" 
-                style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-pref-width: 120;"/>
-    </HBox>
-    
-    <ListView fx:id="filesListView" VBox.vgrow="ALWAYS" 
-              style="-fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-background-color: white;"/>
-    
-    <HBox spacing="10" alignment="CENTER">
-        <Button text="Compresser" onAction="#handleCompress" 
-                style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-pref-width: 150; -fx-pref-height: 40;"/>
-    </HBox>
-    
-    <VBox spacing="5">
-        <Label fx:id="statusLabel" text="Prêt" 
-               style="-fx-text-fill: #7f8c8d; -fx-font-style: italic;"/>
-        <Label fx:id="compressionRatioLabel" text="" 
-               style="-fx-text-fill: #27ae60; -fx-font-weight: bold;"/>
-    </VBox>
-    
-</VBox>
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.multitools.MainController"
+            stylesheets="@style.css"
+    styleClass="root">
+
+    <!-- ==================== HEADER ==================== -->
+
+    <top>
+        <VBox spacing="20"
+              style="-fx-background-color: linear-gradient(to bottom, #ffffff, #f8fafc);
+                     -fx-border-color: #e2e8f0;
+                     -fx-border-width: 0 0 1 0;
+                     -fx-padding: 30 40 25 40;">
+
+            <!-- Titre principal -->
+            <VBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="MultiTools"
+                       style="-fx-font-size: 32px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #1e293b;
+                              -fx-font-family: 'Segoe UI', sans-serif;"/>
+                
+                <Label text="Tous vos outils au même endroit"
+                       style="-fx-font-size: 16px;
+                              -fx-text-fill: #64748b;
+                              -fx-font-family: 'Segoe UI', sans-serif;"/>
+            </VBox>
+
+            <!-- Barre de recherche -->
+            <HBox spacing="10"
+                  alignment="CENTER_LEFT"
+                  style="-fx-background-color: white;
+                         -fx-border-color: #cbd5e0;
+                         -fx-border-radius: 12;
+                         -fx-background-radius: 12;
+                         -fx-padding: 12 16 12 16;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 2);">
+
+                <Label text="🔎"
+                       style="-fx-font-family: 'Segoe UI Emoji';
+                              -fx-font-size: 18px;"/>
+
+                <TextField fx:id="searchField"
+                          promptText="Rechercher un outil..."
+                          HBox.hgrow="ALWAYS"
+                          style="-fx-background-color: transparent;
+                                 -fx-border-color: transparent;
+                                 -fx-font-size: 15px;
+                                 -fx-text-fill: #334155;
+                                 -fx-prompt-text-fill: #94a3b8;"/>
+
+            </HBox>
+
+        </VBox>
+    </top>
+
+
+    <!-- ==================== CONTENU - GRILLE D'OUTILS ==================== -->
+
+    <center>
+        <ScrollPane fitToWidth="true"
+                    fitToHeight="true"
+                    style="-fx-background-color: #f8fafc;
+                           -fx-border-color: transparent;">
+
+            <VBox spacing="30"
+                  style="-fx-padding: 30 40 40 40;">
+
+                <!-- Grille d'outils -->
+                <FlowPane hgap="20"
+                          vgap="20"
+                          alignment="TOP_CENTER">
+
+                    <!-- Carte Compression -->
+                    <VBox spacing="12"
+                          prefWidth="280"
+                          prefHeight="180"
+                          styleClass="tool-card"
+                          style="-fx-padding: 24;"
+                          onMouseClicked="#openCompressionTool">
+
+                        <HBox alignment="CENTER_LEFT" spacing="16">
+                            <Label text="📦"
+                                   style="-fx-font-family: 'Segoe UI Emoji';
+                                          -fx-font-size: 32px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                        </HBox>
+
+                        <VBox spacing="4">
+                            <Label text="Compression"
+                                   style="-fx-font-size: 18px;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #1e293b;
+                                          -fx-font-family: 'Segoe UI', sans-serif;"/>
+                            <Label text="Compresser et décompresser"
+                                   style="-fx-font-size: 13px;
+                                          -fx-text-fill: #64748b;
+                                          -fx-font-family: 'Segoe UI', sans-serif;"/>
+                        </VBox>
+
+                    </VBox>
+
+                </FlowPane>
+
+            </VBox>
+
+        </ScrollPane>
+    </center>
+
+
+    <!-- ==================== FOOTER ==================== -->
+
+    <bottom>
+        <HBox alignment="CENTER"
+              spacing="20"
+              prefHeight="60"
+              style="-fx-background-color: #f8fafc;
+                     -fx-border-color: #e2e8f0;
+                     -fx-border-width: 1 0 0 0;
+                     -fx-padding: 0 20 0 20;">
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Label fx:id="versionLabel"
+                   text="Version 1.2.0"
+                   style="-fx-text-fill: #94a3b8;
+                          -fx-font-size: 12px;
+                          -fx-font-family: 'Segoe UI', sans-serif;"/>
+
+            <Button text="↻  Mises à jour"
+                    onAction="#handleUpdateCheck"
+                    style="-fx-background-color: transparent;
+                           -fx-text-fill: #64748b;
+                           -fx-font-size: 13px;
+                           -fx-cursor: hand;
+                           -fx-font-family: 'Segoe UI', sans-serif;"/>
+
+        </HBox>
+    </bottom>
+
+</BorderPane>
