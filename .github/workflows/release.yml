@@ -1,4 +1,4 @@
-name: Build and Release JavaZip
+name: Build and Release Multitools
 
 on:
   push:
@@ -38,7 +38,7 @@ jobs:
           $version = $env:GITHUB_REF_NAME -replace '^v', ''
 
           New-Item -ItemType Directory -Force -Path target\app
-          Copy-Item target\javazip-$version.jar target\app\
+          Copy-Item target\multitools-$version.jar target\app\
           mvn dependency:copy-dependencies -DoutputDirectory=target/app -DincludeScope=runtime
 
           Remove-Item target\app\javafx-base-21.0.6.jar -ErrorAction SilentlyContinue
@@ -55,17 +55,17 @@ jobs:
 
           jpackage `
             --type exe `
-            --name JavaZip `
+            --name Multitools `
             --input target\app `
-            --main-jar "javazip-$version.jar" `
-            --main-class com.example.javazip.JavaZipApp `
+            --main-jar "multitools-$version.jar" `
+            --main-class com.example.multitools.MainApp `
             --dest package `
             --app-version $version `
-            --vendor "JavaZip" `
-            --description "Application de compression ZIP avec JavaFX" `
+            --vendor "Multitools foundation" `
+            --description "Application multi-outils avec JavaFX" `
             --win-menu `
             --win-shortcut `
-            --icon JavaZip.ico `
+            --icon Multitools.ico `
             --java-options '--module-path=$APPDIR --add-modules=javafx.controls,javafx.fxml'
 
       - name: Create ZIP
@@ -73,7 +73,7 @@ jobs:
         run: |
           $version = $env:GITHUB_REF_NAME -replace '^v', ''
 
-          Copy-Item "package\JavaZip-$version.exe" "JavaZip-$version.exe"
+          Copy-Item "package\Multitools-$version.exe" "Multitools-$version.exe"
 
       - name: Create GitHub Release
         shell: powershell
@@ -83,6 +83,6 @@ jobs:
           $version = $env:GITHUB_REF_NAME -replace '^v', ''
 
           gh release create "v$version" `
-            "JavaZip-$version.exe" `
-            --title "JavaZip $version" `
+            "Multitools-$version.exe" `
+            --title "Multitools $version" `
             --generate-notes
