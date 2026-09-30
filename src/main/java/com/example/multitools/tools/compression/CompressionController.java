@@ -7,6 +7,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.DirectoryChooser;
@@ -17,6 +19,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Region;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -57,6 +60,9 @@ public class CompressionController {
         versionLabel.setText("Version " + UpdateChecker.getCurrentVersion());
 
         compressButton.setDisable(true);
+
+        // Configuration de la cell factory pour la ListView
+        filesListView.setCellFactory(listView -> new FileListCell());
 
         dropZone.setOnMouseClicked(event -> {
             if (event.getTarget() != filesListView) {
@@ -417,5 +423,97 @@ public class CompressionController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    // Classe interne pour les cellules personnalisées de la ListView
+    private class FileListCell extends ListCell<String> {
+        private final HBox content;
+        private final Label iconLabel;
+        private final Label nameLabel;
+        private final Button deleteButton;
+
+        public FileListCell() {
+            super();
+
+            iconLabel = new Label();
+            iconLabel.setStyle("-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 18px;");
+
+            nameLabel = new Label();
+            nameLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #334155;");
+            HBox.setHgrow(nameLabel, Priority.ALWAYS);
+
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+
+            deleteButton = new Button("✕");
+            deleteButton.setStyle(
+                "-fx-background-color: transparent;" +
+                "-fx-text-fill: #ef4444;" +
+                "-fx-font-size: 16px;" +
+                "-fx-font-weight: bold;" +
+                "-fx-cursor: hand;" +
+                "-fx-padding: 4 8 4 8;" +
+                "-fx-border-radius: 4;" +
+                "-fx-background-radius: 4;"
+            );
+            deleteButton.setOnAction(event -> {
+                int index = getIndex();
+                if (index >= 0) {
+                    selectedFiles.remove(index);
+                    filesListView.getItems().remove(index);
+
+                    if (filesListView.getItems().isEmpty()) {
+                        emptyState.setVisible(true);
+                        emptyState.setManaged(true);
+                        filesListView.setVisible(false);
+                        filesListView.setManaged(false);
+                        compressButton.setDisable(true);
+                    }
+                    updateStatus("Fichier supprimé");
+                }
+            });
+
+            content = new HBox(10, iconLabel, nameLabel, spacer, deleteButton);
+            content.setStyle("-fx-padding: 8 12 8 12;");
+            content.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        }
+
+        @Override
+        protected void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+
+            if (empty || item == null) {
+                setGraphic(null);
+            } else {
+                nameLabel.setText(item);
+                iconLabel.setText(getFileIcon(item));
+                setGraphic(content);
+            }
+        }
+
+        private String getFileIcon(String fileName) {
+            if (fileName.startsWith("[Dossier]")) {
+                return "📁";
+            }
+
+            String lowerName = fileName.toLowerCase();
+            if (lowerName.endsWith(".pdf")) return "📄";
+            if (lowerName.endsWith(".doc") || lowerName.endsWith(".docx")) return "📝";
+            if (lowerName.endsWith(".xls") || lowerName.endsWith(".xlsx")) return "📊";
+            if (lowerName.endsWith(".ppt") || lowerName.endsWith(".pptx")) return "📽";
+            if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".png") || lowerName.endsWith(".gif") || lowerName.endsWith(".bmp")) return "🖼";
+            if (lowerName.endsWith(".mp3") || lowerName.endsWith(".wav") || lowerName.endsWith(".flac") || lowerName.endsWith(".ogg")) return "🎵";
+            if (lowerName.endsWith(".mp4") || lowerName.endsWith(".avi") || lowerName.endsWith(".mkv") || lowerName.endsWith(".mov")) return "🎬";
+            if (lowerName.endsWith(".zip") || lowerName.endsWith(".rar") || lowerName.endsWith(".7z") || lowerName.endsWith(".tar")) return "📦";
+            if (lowerName.endsWith(".txt")) return "📃";
+            if (lowerName.endsWith(".html") || lowerName.endsWith(".htm") || lowerName.endsWith(".css") || lowerName.endsWith(".js")) return "🌐";
+            if (lowerName.endsWith(".java") || lowerName.endsWith(".class") || lowerName.endsWith(".jar")) return "☕";
+            if (lowerName.endsWith(".py")) return "🐍";
+            if (lowerName.endsWith(".cpp") || lowerName.endsWith(".c") || lowerName.endsWith(".h")) return "⚙";
+            if (lowerName.endsWith(".exe") || lowerName.endsWith(".msi")) return "⚙";
+            if (lowerName.endsWith(".xml") || lowerName.endsWith(".json")) return "📋";
+            
+            return "📄"; // Icône par défaut
+        }
     }
 }

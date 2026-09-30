@@ -26,7 +26,7 @@ public class MainApp extends Application {
         
         Scene scene = new Scene(root, 1100, 700);
         
-        stage.setTitle("Multitools foundation");
+        stage.setTitle("Multitools");
         stage.setScene(scene);
         
         stage.setMinWidth(900);

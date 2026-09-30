@@ -9,10 +9,10 @@
 
     <groupId>com.example</groupId>
     <artifactId>multitools</artifactId>
-    <version>1.2.6</version>
+    <version>1.2.7</version>
 
-    <name>Multitools foundation</name>
-    <description>Application multi-outils avec JavaFX</description>
+    <name>Multitools</name>
+    <description>Application multi-outils</description>
 
     <properties>
         <java.version>21</java.version>

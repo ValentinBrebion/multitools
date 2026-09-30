@@ -1,73 +1,30 @@
-package com.example.multitools;
+package com.example.multitools.tools.security;
 
 import com.example.multitools.core.NavigationManager;
-import com.example.multitools.core.ToolManager;
-import com.example.multitools.tools.compression.CompressionTool;
-import com.example.multitools.tools.image.ImageTool;
-import com.example.multitools.tools.text.TextTool;
 import com.example.multitools.update.UpdateChecker;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 
-public class MainController {
-    
-    @FXML
-    private TextField searchField;
+public class SecurityController {
     
     @FXML
     private Label versionLabel;
-    
+
     @FXML
     public void initialize() {
         versionLabel.setText("Version " + UpdateChecker.getCurrentVersion());
-        
-        // Initialiser les gestionnaires
-        NavigationManager.getInstance();
-        ToolManager.getInstance();
     }
-    
+
     @FXML
-    private void openCompressionTool() {
+    private void openPasswordGenerator() {
         try {
             FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("/fxml/compression/compress.fxml")
+                getClass().getResource("/fxml/security/password-generator.fxml")
             );
-            loader.setControllerFactory(param -> new com.example.multitools.tools.compression.CompressionController());
-            
-            Parent root = loader.load();
-            
-            // Naviguer vers l'outil de compression dans la même fenêtre
-            NavigationManager.getInstance().navigateTo(root);
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert("Erreur", "Impossible d'ouvrir l'outil de compression: " + e.getMessage());
-        }
-    }
-    
-    @FXML
-    private void openImageTool() {
-        ImageTool imageTool = new ImageTool();
-        imageTool.open();
-    }
-    
-    @FXML
-    private void openTextTool() {
-        TextTool textTool = new TextTool();
-        textTool.open();
-    }
-    
-    @FXML
-    private void openSecurityTool() {
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("/fxml/security/security.fxml")
-            );
-            loader.setControllerFactory(param -> new com.example.multitools.tools.security.SecurityController());
+            loader.setControllerFactory(param -> new PasswordGeneratorController());
             
             Parent root = loader.load();
             
@@ -75,24 +32,42 @@ public class MainController {
             
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert("Erreur", "Impossible d'ouvrir l'outil de sécurité: " + e.getMessage());
+            showAlert("Erreur", "Impossible d'ouvrir le générateur de mot de passe: " + e.getMessage());
         }
     }
-    
+
+    @FXML
+    private void handleBack() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/main.fxml")
+            );
+            loader.setControllerFactory(param -> new com.example.multitools.MainController());
+            
+            Parent root = loader.load();
+            
+            NavigationManager.getInstance().navigateTo(root);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Erreur", "Impossible de revenir au menu principal: " + e.getMessage());
+        }
+    }
+
     @FXML
     private void handleUpdateCheck() {
         showAlert("Mise à jour", "Recherche de mises à jour...");
         
         Thread updateThread = new Thread(() -> {
-            com.example.multitools.update.UpdateChecker checker = new com.example.multitools.update.UpdateChecker();
-            com.example.multitools.update.UpdateChecker.UpdateInfo updateInfo = checker.checkForUpdates();
+            UpdateChecker checker = new UpdateChecker();
+            UpdateChecker.UpdateInfo updateInfo = checker.checkForUpdates();
             
             javafx.application.Platform.runLater(() -> {
                 if (updateInfo.hasUpdate) {
                     showUpdateDialog(updateInfo);
                 } else {
                     showAlert("Mise à jour", "Vous utilisez déjà la dernière version de Multitools (" + 
-                            com.example.multitools.update.UpdateChecker.getCurrentVersion() + ")");
+                            UpdateChecker.getCurrentVersion() + ")");
                 }
             });
         });
@@ -100,13 +75,13 @@ public class MainController {
         updateThread.setDaemon(true);
         updateThread.start();
     }
-    
-    private void showUpdateDialog(com.example.multitools.update.UpdateChecker.UpdateInfo updateInfo) {
+
+    private void showUpdateDialog(UpdateChecker.UpdateInfo updateInfo) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Mise à jour disponible");
         alert.setHeaderText("Multitools " + updateInfo.latestVersion + " est disponible");
         
-        String message = "Votre version: " + com.example.multitools.update.UpdateChecker.getCurrentVersion() + "\n" +
+        String message = "Votre version: " + UpdateChecker.getCurrentVersion() + "\n" +
                         "Nouvelle version: " + updateInfo.latestVersion + "\n\n";
         
         if (updateInfo.releaseNotes != null && !updateInfo.releaseNotes.isEmpty()) {
@@ -128,7 +103,7 @@ public class MainController {
             }
         });
     }
-    
+
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);

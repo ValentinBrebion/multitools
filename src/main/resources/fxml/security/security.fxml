@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.multitools.tools.security.SecurityController"
+            stylesheets="@../style.css"
+    styleClass="root">
+
+    <!-- ==================== HEADER ==================== -->
+
+    <top>
+        <HBox alignment="CENTER_LEFT"
+                spacing="12"
+                prefHeight="82"
+                style="-fx-background-color: #f5f7f9;
+                        -fx-border-color: #cbd5df;
+                        -fx-border-width: 0 0 1 0;
+                        -fx-padding: 0 20 0 20;">
+
+                <Button text="← Retour"
+                        onAction="#handleBack"
+                        style="-fx-background-color: transparent;
+                               -fx-text-fill: #64748b;
+                               -fx-font-size: 14px;
+                               -fx-cursor: hand;
+                               -fx-padding: 8 12 8 12;"/>
+
+                <Region prefWidth="10"/>
+
+                <Label text="🔒"
+       style="-fx-font-family: 'Segoe UI Emoji';
+              -fx-font-size: 20px;"/>
+
+                <VBox spacing="2">
+                        <Label text="Sécurité"
+                        style="-fx-font-size: 20px;
+                                -fx-font-weight: bold;
+                                -fx-text-fill: #111827;"/>
+
+                        <Label text="Outils de sécurité"
+                        style="-fx-font-size: 14px;
+                                -fx-text-fill: #64748b;"/>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <VBox alignment="CENTER_RIGHT"
+                        spacing="2">
+                        <Button text="↻  Mises à jour"
+                                onAction="#handleUpdateCheck"
+                                style="-fx-background-color: transparent;
+                                -fx-text-fill: #111827;
+                                -fx-font-size: 14px;
+                                -fx-cursor: hand;"/>
+
+                        <Label fx:id="versionLabel"
+                        text="Version 1.0.0"
+                        style="-fx-text-fill: #64748b;
+                               -fx-font-size: 11px;"/>
+                </VBox>
+
+                </HBox>
+    </top>
+
+
+    <!-- ==================== CONTENU ==================== -->
+
+    <center>
+        <ScrollPane fitToWidth="true"
+                    fitToHeight="true"
+                    style="-fx-background-color: #f8fafc;
+                           -fx-border-color: transparent;">
+
+            <VBox spacing="30"
+                  style="-fx-padding: 30 40 40 40;">
+
+                <!-- Grille d'outils de sécurité -->
+                <FlowPane hgap="20"
+                          vgap="20"
+                          alignment="TOP_CENTER">
+
+                    <!-- Carte Générateur de mot de passe -->
+                    <VBox spacing="12"
+                          prefWidth="280"
+                          prefHeight="180"
+                          styleClass="tool-card"
+                          style="-fx-padding: 24;"
+                          onMouseClicked="#openPasswordGenerator">
+
+                        <HBox alignment="CENTER_LEFT" spacing="16">
+                            <Label text="🔑"
+                                   style="-fx-font-family: 'Segoe UI Emoji';
+                                          -fx-font-size: 32px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                        </HBox>
+
+                        <VBox spacing="4">
+                            <Label text="Générateur de mot de passe"
+                                   style="-fx-font-size: 18px;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #1e293b;
+                                          -fx-font-family: 'Segoe UI', sans-serif;"/>
+                            <Label text="Générer des mots de passe sécurisés"
+                                   style="-fx-font-size: 13px;
+                                          -fx-text-fill: #64748b;
+                                          -fx-font-family: 'Segoe UI', sans-serif;"/>
+                        </VBox>
+
+                    </VBox>
+
+                </FlowPane>
+
+            </VBox>
+
+        </ScrollPane>
+    </center>
+
+</BorderPane>

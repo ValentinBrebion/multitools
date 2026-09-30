@@ -1,4 +1,4 @@
-# Multitools Foundation
+# Multitools
 
 Application de bureau Java modulaire offrant plusieurs outils utilitaires.
 
@@ -54,39 +54,6 @@ java -jar target/multitools-1.2.0.jar
 6. Cliquez sur "Compresser" pour créer le fichier ZIP
 7. Choisissez l'emplacement et le nom du fichier ZIP
 8. L'application affiche le taux de compression après la réussite
-
-## Structure du Projet
-
-```
-src/
-├── main/
-│   ├── java/
-│   │   └── com/
-│   │       └── example/
-│   │           └── multitools/
-│   │               ├── MainApp.java                    # Point d'entrée de l'application
-│   │               ├── core/
-│   │               │   ├── Tool.java                  # Interface pour les outils
-│   │               │   ├── ToolManager.java           # Gestionnaire des outils
-│   │               │   └── NavigationManager.java     # Gestionnaire de navigation
-│   │               ├── tools/
-│   │               │   ├── compression/
-│   │               │   │   ├── CompressionTool.java   # Implémentation de l'outil compression
-│   │               │   │   ├── CompressionController.java # Contrôleur de l'interface compression
-│   │               │   │   └── ZipService.java        # Service de compression ZIP
-│   │               │   ├── text/
-│   │               │   │   ├── TextTool.java          # Outil de texte (placeholder)
-│   │               │   │   └── TextController.java     # Contrôleur texte (placeholder)
-│   │               │   └── image/
-│   │               │       ├── ImageTool.java         # Outil d'image (placeholder)
-│   │               │       └── ImageController.java    # Contrôleur image (placeholder)
-│   │               └── update/
-│   │                   └── UpdateChecker.java          # Système de mise à jour
-│   └── resources/
-│       ├── fxml/
-│       │   └── main.fxml                              # Interface utilisateur compression
-│       └── version.properties                          # Version de l'application
-```
 
 ## Technologies
 

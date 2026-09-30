@@ -61,7 +61,7 @@ jobs:
             --main-class com.example.multitools.MainApp `
             --dest package `
             --app-version $version `
-            --vendor "Multitools foundation" `
+            --vendor "Multitools" `
             --description "Application multi-outils avec JavaFX" `
             --win-menu `
             --win-shortcut `
