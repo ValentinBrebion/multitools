@@ -138,6 +138,35 @@
 
                     </VBox>
 
+                    <!-- Carte Convertisseur -->
+                    <VBox spacing="12"
+                          prefWidth="280"
+                          prefHeight="180"
+                          styleClass="tool-card"
+                          style="-fx-padding: 24;"
+                          onMouseClicked="#openConverterTool">
+
+                        <HBox alignment="CENTER_LEFT" spacing="16">
+                            <Label text="🔄"
+                                   style="-fx-font-family: 'Segoe UI Emoji';
+                                          -fx-font-size: 32px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                        </HBox>
+
+                        <VBox spacing="4">
+                            <Label text="Convertisseur"
+                                   style="-fx-font-size: 18px;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #1e293b;
+                                          -fx-font-family: 'Segoe UI', sans-serif;"/>
+                            <Label text="Convertir des unités"
+                                   style="-fx-font-size: 13px;
+                                          -fx-text-fill: #64748b;
+                                          -fx-font-family: 'Segoe UI', sans-serif;"/>
+                        </VBox>
+
+                    </VBox>
+
                 </FlowPane>
 
             </VBox>

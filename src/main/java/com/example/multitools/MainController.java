@@ -3,6 +3,7 @@ package com.example.multitools;
 import com.example.multitools.core.NavigationManager;
 import com.example.multitools.core.ToolManager;
 import com.example.multitools.tools.compression.CompressionTool;
+import com.example.multitools.tools.converter.UnitConverterTool;
 import com.example.multitools.tools.image.ImageTool;
 import com.example.multitools.tools.text.TextTool;
 import com.example.multitools.update.UpdateChecker;
@@ -71,15 +72,21 @@ public class MainController {
                 getClass().getResource("/fxml/security/security.fxml")
             );
             loader.setControllerFactory(param -> new com.example.multitools.tools.security.SecurityController());
-            
+
             Parent root = loader.load();
-            
+
             NavigationManager.getInstance().navigateTo(root);
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             showAlert("Erreur", "Impossible d'ouvrir l'outil de sécurité: " + e.getMessage());
         }
+    }
+
+    @FXML
+    private void openConverterTool() {
+        UnitConverterTool converterTool = new UnitConverterTool();
+        converterTool.open();
     }
     
     @FXML

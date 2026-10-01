@@ -23,7 +23,10 @@ public class ToolManager {
     private void initializeDefaultTools() {
         // Ajouter l'outil de compression par défaut
         tools.add(new com.example.multitools.tools.compression.CompressionTool());
-        
+
+        // Ajouter le convertisseur d'unités
+        tools.add(new com.example.multitools.tools.converter.UnitConverterTool());
+
         // Ajouter les outils placeholder pour le futur
         tools.add(new com.example.multitools.tools.text.TextTool());
         tools.add(new com.example.multitools.tools.image.ImageTool());
