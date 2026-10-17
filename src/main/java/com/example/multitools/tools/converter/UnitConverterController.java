@@ -361,7 +361,7 @@ public class UnitConverterController {
                             String currentExePath = UpdateChecker.getCurrentExecutablePath();
                             java.nio.file.Path currentExe = java.nio.file.Path.of(currentExePath);
                             java.nio.file.Path scriptPath = checker.createUpdateScript(currentExe, downloadedFile);
-                            UpdateChecker.runUpdateScriptAndExit(scriptPath);
+                            UpdateChecker.runUpdateScriptAndExit(scriptPath, currentExe);
                         } catch (Exception e) {
                             e.printStackTrace();
                             javafx.application.Platform.runLater(() -> {

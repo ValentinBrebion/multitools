@@ -377,7 +377,7 @@ public class CompressionController {
                 // Laisse le temps à l'UI de se fermer proprement avant de tuer le process
                 Thread.sleep(300);
 
-                UpdateChecker.runUpdateScriptAndExit(updateScript);
+                UpdateChecker.runUpdateScriptAndExit(updateScript, Path.of(currentExe));
 
             } catch (Exception e) {
                 e.printStackTrace();
