@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.multitools.tools.qrcode.QRCodeController"
+            stylesheets="@../style.css"
+            styleClass="root">
+    <top>
+        <HBox alignment="CENTER_LEFT"
+              spacing="12"
+              style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0; -fx-padding: 18 28;">
+            <Button text="← Retour"
+                    onAction="#handleBack"
+                    style="-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-font-size: 14px; -fx-cursor: hand;"/>
+            <Label text="▦" style="-fx-font-size: 26px; -fx-text-fill: #087edb;"/>
+            <VBox spacing="2">
+                <Label text="Générateur de QR code"
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                <Label text="Créez une image QR à partir d'un texte ou d'un lien"
+                       style="-fx-font-size: 13px; -fx-text-fill: #64748b;"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+        </HBox>
+    </top>
+
+    <center>
+        <HBox spacing="24" alignment="TOP_CENTER" style="-fx-padding: 32;">
+            <VBox spacing="14" HBox.hgrow="ALWAYS" maxWidth="600"
+                  style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-padding: 24;">
+                <Label text="Contenu à encoder"
+                       style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                <TextArea fx:id="contentArea"
+                          promptText="Saisissez un texte, une URL ou toute autre information…"
+                          wrapText="true"
+                          prefRowCount="8"
+                          VBox.vgrow="ALWAYS"
+                          style="-fx-font-size: 14px;"/>
+                <HBox spacing="16" alignment="CENTER_LEFT">
+                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                        <Label text="Taille de l'image" style="-fx-font-weight: bold; -fx-text-fill: #52677d;"/>
+                        <ComboBox fx:id="sizeComboBox" maxWidth="Infinity"/>
+                    </VBox>
+                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                        <Label text="Correction d'erreurs" style="-fx-font-weight: bold; -fx-text-fill: #52677d;"/>
+                        <ComboBox fx:id="correctionComboBox" maxWidth="Infinity"/>
+                    </VBox>
+                </HBox>
+                <Button text="Générer le QR code"
+                        onAction="#handleGenerate"
+                        maxWidth="Infinity"
+                        styleClass="primary-button"/>
+            </VBox>
+
+            <VBox spacing="16" alignment="TOP_CENTER" prefWidth="390"
+                  style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-padding: 24;">
+                <Label text="Aperçu" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                <VBox alignment="CENTER" minWidth="320" minHeight="320" prefWidth="320" prefHeight="320"
+                      style="-fx-background-color: #f8fafc; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;">
+                    <ImageView fx:id="qrImageView" fitWidth="300" fitHeight="300" preserveRatio="true" smooth="false"/>
+                </VBox>
+                <Label fx:id="statusLabel"
+                       text="Votre QR code apparaîtra ici."
+                       wrapText="true"
+                       maxWidth="Infinity"
+                       style="-fx-text-fill: #64748b; -fx-font-size: 13px;"/>
+                <Button fx:id="saveButton"
+                        text="Enregistrer en PNG"
+                        onAction="#handleSave"
+                        maxWidth="Infinity"
+                        disable="true"
+                        styleClass="secondary-button"/>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>

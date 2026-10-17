@@ -5,6 +5,7 @@ import com.example.multitools.core.ToolManager;
 import com.example.multitools.tools.compression.CompressionTool;
 import com.example.multitools.tools.converter.UnitConverterTool;
 import com.example.multitools.tools.image.ImageTool;
+import com.example.multitools.tools.qrcode.QRCodeTool;
 import com.example.multitools.tools.text.TextTool;
 import com.example.multitools.update.UpdateChecker;
 import javafx.fxml.FXML;
@@ -87,6 +88,11 @@ public class MainController {
     private void openConverterTool() {
         UnitConverterTool converterTool = new UnitConverterTool();
         converterTool.open();
+    }
+
+    @FXML
+    private void openQRCodeTool() {
+        new QRCodeTool().open();
     }
     
     @FXML
@@ -175,7 +181,7 @@ public class MainController {
                             String currentExePath = com.example.multitools.update.UpdateChecker.getCurrentExecutablePath();
                             java.nio.file.Path currentExe = java.nio.file.Path.of(currentExePath);
                             java.nio.file.Path scriptPath = checker.createUpdateScript(currentExe, downloadedFile);
-                            com.example.multitools.update.UpdateChecker.runUpdateScriptAndExit(scriptPath);
+                            com.example.multitools.update.UpdateChecker.runUpdateScriptAndExit(scriptPath, currentExe);
                         } catch (Exception e) {
                             e.printStackTrace();
                             javafx.application.Platform.runLater(() -> {

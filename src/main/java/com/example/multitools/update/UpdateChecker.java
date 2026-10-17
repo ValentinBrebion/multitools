@@ -338,13 +338,24 @@ public class UpdateChecker {
      * Lance le script de mise à jour en arrière-plan (détaché du process Multitools),
      * puis ferme immédiatement l'application courante.
      */
-    public static void runUpdateScriptAndExit(Path scriptPath) throws IOException {
-        new ProcessBuilder(
-                "cmd.exe", "/c", "start", "\"\"", "/min",
-                "cmd.exe", "/c", scriptPath.toAbsolutePath().toString()
-        )
-                .directory(scriptPath.getParent().toFile())
-                .start();
+    public static void runUpdateScriptAndExit(Path scriptPath, Path currentExe) throws IOException {
+        String script = scriptPath.toAbsolutePath().toString();
+        ProcessBuilder pb;
+
+        if (Files.isWritable(currentExe)) {
+            pb = new ProcessBuilder("cmd.exe", "/c", "start", "Multitools-Update", "/min",
+                    "cmd.exe", "/c", script);
+        } else {
+            // Dossier protégé (Program Files) : demande les droits admin via UAC
+            pb = new ProcessBuilder("powershell.exe", "-NoProfile", "-Command",
+                    "Start-Process cmd.exe -ArgumentList '/c','\"" + script + "\"' " +
+                    "-Verb RunAs -WindowStyle Hidden");
+        }
+
+        pb.directory(scriptPath.getParent().toFile());
+        pb.redirectErrorStream(true);
+        pb.redirectOutput(scriptPath.resolveSibling("multitools-launcher.log").toFile());
+        pb.start();
 
         javafx.application.Platform.exit();
         System.exit(0);

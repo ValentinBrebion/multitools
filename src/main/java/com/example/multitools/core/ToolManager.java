@@ -27,6 +27,9 @@ public class ToolManager {
         // Ajouter le convertisseur d'unités
         tools.add(new com.example.multitools.tools.converter.UnitConverterTool());
 
+        // Ajouter le générateur de QR code
+        tools.add(new com.example.multitools.tools.qrcode.QRCodeTool());
+
         // Ajouter les outils placeholder pour le futur
         tools.add(new com.example.multitools.tools.text.TextTool());
         tools.add(new com.example.multitools.tools.image.ImageTool());

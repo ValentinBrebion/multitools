@@ -37,6 +37,13 @@
             <version>${javafx.version}</version>
         </dependency>
 
+        <!-- Génération locale de QR codes -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+
     </dependencies>
 
     <build>

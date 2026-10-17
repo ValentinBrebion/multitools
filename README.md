@@ -13,6 +13,11 @@ Application de bureau Java modulaire offrant plusieurs outils utilitaires.
 - Affichage du taux de compression
 - Glisser-déposer de fichiers
 
+### Générateur de QR code
+- Encoder un texte, une URL ou toute autre information
+- Régler la taille et le niveau de correction d'erreurs
+- Prévisualiser le QR code et l'enregistrer au format PNG
+
 ### Outils Futurs (En développement)
 - Outil de manipulation de texte
 - Outil de manipulation d'images
