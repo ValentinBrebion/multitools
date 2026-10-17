@@ -5,6 +5,7 @@ import com.example.multitools.core.ToolManager;
 import com.example.multitools.tools.compression.CompressionTool;
 import com.example.multitools.tools.converter.UnitConverterTool;
 import com.example.multitools.tools.image.ImageTool;
+import com.example.multitools.tools.http.HttpStatusTool;
 import com.example.multitools.tools.qrcode.QRCodeTool;
 import com.example.multitools.tools.text.TextTool;
 import com.example.multitools.update.UpdateChecker;
@@ -93,6 +94,11 @@ public class MainController {
     @FXML
     private void openQRCodeTool() {
         new QRCodeTool().open();
+    }
+
+    @FXML
+    private void openHttpStatusTool() {
+        new HttpStatusTool().open();
     }
     
     @FXML

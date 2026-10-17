@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.multitools.tools.http.HttpStatusController"
+            stylesheets="@../style.css"
+            styleClass="root">
+    <top>
+        <HBox alignment="CENTER_LEFT"
+              spacing="12"
+              style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0; -fx-padding: 18 28;">
+            <Button text="← Retour"
+                    onAction="#handleBack"
+                    style="-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-font-size: 14px; -fx-cursor: hand;"/>
+            <Label text="HTTP"
+                   style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #087edb;"/>
+            <VBox spacing="2">
+                <Label text="Explorateur de codes HTTP"
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                <Label text="Signification, causes habituelles et pistes de diagnostic"
+                       style="-fx-font-size: 13px; -fx-text-fill: #64748b;"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+        </HBox>
+    </top>
+
+    <center>
+        <HBox spacing="20" style="-fx-padding: 24;">
+            <VBox spacing="12" prefWidth="300" minWidth="250"
+                  style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-padding: 18;">
+                <Label text="Rechercher un code"
+                       style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                <TextField fx:id="searchField"
+                           promptText="Ex. 401, accès refusé, passerelle…"
+                           style="-fx-font-size: 14px;"/>
+                <Label fx:id="resultCountLabel"
+                       text="Codes disponibles"
+                       style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                <ListView fx:id="statusList" VBox.vgrow="ALWAYS"/>
+            </VBox>
+
+            <ScrollPane fitToWidth="true" HBox.hgrow="ALWAYS"
+                        style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
+                <content>
+                    <VBox spacing="16" style="-fx-padding: 0 4 4 0;">
+                        <VBox spacing="6"
+                              style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-padding: 22;">
+                            <HBox alignment="CENTER_LEFT" spacing="14">
+                                <Label fx:id="statusCodeLabel"
+                                       text="401"
+                                       style="-fx-font-size: 38px; -fx-font-weight: bold; -fx-text-fill: #087edb;"/>
+                                <VBox spacing="4">
+                                    <Label fx:id="statusPhraseLabel"
+                                           text="Unauthorized"
+                                           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                                    <Label fx:id="statusClassLabel"
+                                           text="4xx · Erreur côté client"
+                                           style="-fx-font-size: 13px; -fx-text-fill: #64748b;"/>
+                                </VBox>
+                            </HBox>
+                            <Label fx:id="meaningLabel"
+                                   text="La requête nécessite une authentification valide."
+                                   wrapText="true"
+                                   style="-fx-font-size: 14px; -fx-text-fill: #475569; -fx-padding: 8 0 0 0;"/>
+                        </VBox>
+
+                        <VBox spacing="10"
+                              style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-padding: 22;">
+                            <Label text="Causes habituelles"
+                                   style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                            <VBox fx:id="causesBox" spacing="7"/>
+                        </VBox>
+
+                        <VBox spacing="10"
+                              style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-padding: 22;">
+                            <Label text="Pistes de diagnostic"
+                                   style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                            <VBox fx:id="troubleshootingBox" spacing="7"/>
+                        </VBox>
+                    </VBox>
+                </content>
+            </ScrollPane>
+        </HBox>
+    </center>
+</BorderPane>

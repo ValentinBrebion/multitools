@@ -30,6 +30,9 @@ public class ToolManager {
         // Ajouter le générateur de QR code
         tools.add(new com.example.multitools.tools.qrcode.QRCodeTool());
 
+        // Ajouter l'explorateur de codes HTTP
+        tools.add(new com.example.multitools.tools.http.HttpStatusTool());
+
         // Ajouter les outils placeholder pour le futur
         tools.add(new com.example.multitools.tools.text.TextTool());
         tools.add(new com.example.multitools.tools.image.ImageTool());

@@ -18,6 +18,11 @@ Application de bureau Java modulaire offrant plusieurs outils utilitaires.
 - Régler la taille et le niveau de correction d'erreurs
 - Prévisualiser le QR code et l'enregistrer au format PNG
 
+### Explorateur de codes HTTP
+- Rechercher un code HTTP par numéro ou par signification
+- Consulter sa description, les causes fréquentes et les pistes de diagnostic
+- Parcourir les codes courants des classes 1xx à 5xx
+
 ### Outils Futurs (En développement)
 - Outil de manipulation de texte
 - Outil de manipulation d'images
