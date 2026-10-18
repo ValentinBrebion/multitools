@@ -37,6 +37,11 @@ public class SecurityController {
     }
 
     @FXML
+    private void openHttpStatusTool() {
+        new com.example.multitools.tools.http.HttpStatusTool().open();
+    }
+
+    @FXML
     private void handleBack() {
         try {
             FXMLLoader loader = new FXMLLoader(

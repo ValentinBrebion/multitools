@@ -1,7 +1,12 @@
 package com.example.multitools.tools.image;
 
 import com.example.multitools.core.Tool;
+import com.example.multitools.core.NavigationManager;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert;
+
+import java.io.IOException;
 
 public class ImageTool implements Tool {
 
@@ -22,10 +27,18 @@ public class ImageTool implements Tool {
 
     @Override
     public void open() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Outil d'image");
-        alert.setHeaderText(null);
-        alert.setContentText("L'outil d'image sera disponible dans une future version.");
-        alert.showAndWait();
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/image/image.fxml")
+            );
+            Parent root = loader.load();
+            NavigationManager.getInstance().navigateTo(root);
+        } catch (IOException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erreur");
+            alert.setHeaderText("Impossible d'ouvrir le module Image");
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
+        }
     }
 }

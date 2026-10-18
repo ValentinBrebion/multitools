@@ -3,9 +3,7 @@ package com.example.multitools;
 import com.example.multitools.core.NavigationManager;
 import com.example.multitools.core.ToolManager;
 import com.example.multitools.tools.compression.CompressionTool;
-import com.example.multitools.tools.converter.UnitConverterTool;
 import com.example.multitools.tools.image.ImageTool;
-import com.example.multitools.tools.http.HttpStatusTool;
 import com.example.multitools.tools.qrcode.QRCodeTool;
 import com.example.multitools.tools.text.TextTool;
 import com.example.multitools.update.UpdateChecker;
@@ -86,19 +84,24 @@ public class MainController {
     }
 
     @FXML
-    private void openConverterTool() {
-        UnitConverterTool converterTool = new UnitConverterTool();
-        converterTool.open();
-    }
-
-    @FXML
     private void openQRCodeTool() {
         new QRCodeTool().open();
     }
 
     @FXML
-    private void openHttpStatusTool() {
-        new HttpStatusTool().open();
+    private void openDiversTool() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/divers/divers.fxml")
+            );
+            loader.setControllerFactory(param -> new com.example.multitools.tools.divers.DiversController());
+
+            Parent root = loader.load();
+            NavigationManager.getInstance().navigateTo(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Erreur", "Impossible d'ouvrir le module Divers: " + e.getMessage());
+        }
     }
     
     @FXML

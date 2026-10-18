@@ -1,6 +1,5 @@
 package com.example.multitools.tools.http;
 
-import com.example.multitools.MainController;
 import com.example.multitools.core.NavigationManager;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
@@ -74,8 +73,8 @@ public class HttpStatusController {
     @FXML
     private void handleBack() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main.fxml"));
-            loader.setControllerFactory(type -> new MainController());
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/security/security.fxml"));
+            loader.setControllerFactory(type -> new com.example.multitools.tools.security.SecurityController());
             Parent root = loader.load();
             NavigationManager.getInstance().navigateTo(root);
         } catch (IOException e) {

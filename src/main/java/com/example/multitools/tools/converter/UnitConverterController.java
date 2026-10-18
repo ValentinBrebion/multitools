@@ -250,9 +250,9 @@ public class UnitConverterController {
     private void handleBack() {
         try {
             FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("/fxml/main.fxml")
+                getClass().getResource("/fxml/divers/divers.fxml")
             );
-            loader.setControllerFactory(param -> new com.example.multitools.MainController());
+            loader.setControllerFactory(param -> new com.example.multitools.tools.divers.DiversController());
 
             Parent root = loader.load();
 
