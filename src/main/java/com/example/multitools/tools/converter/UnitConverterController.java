@@ -1,5 +1,9 @@
 package com.example.multitools.tools.converter;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.example.multitools.core.NavigationManager;
 import com.example.multitools.update.UpdateChecker;
 import javafx.fxml.FXML;
@@ -11,9 +15,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.VBox;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class UnitConverterController {
 
@@ -350,31 +351,17 @@ public class UnitConverterController {
 
                 javafx.application.Platform.runLater(() -> {
                     progressAlert.close();
-                    Alert infoAlert = new Alert(Alert.AlertType.INFORMATION);
-                    infoAlert.setTitle("Téléchargement terminé");
-                    infoAlert.setHeaderText(null);
-                    infoAlert.setContentText("Le fichier a été téléchargé avec succès. L'application va maintenant s'installer et redémarrer.");
-                    infoAlert.showAndWait();
-
-                    Thread installThread = new Thread(() -> {
-                        try {
-                            String currentExePath = UpdateChecker.getCurrentExecutablePath();
-                            java.nio.file.Path currentExe = java.nio.file.Path.of(currentExePath);
-                            java.nio.file.Path scriptPath = checker.createUpdateScript(currentExe, downloadedFile);
-                            UpdateChecker.runUpdateScriptAndExit(scriptPath, currentExe);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            javafx.application.Platform.runLater(() -> {
-                                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                                errorAlert.setTitle("Erreur");
-                                errorAlert.setHeaderText(null);
-                                errorAlert.setContentText("Erreur lors de l'installation: " + e.getMessage());
-                                errorAlert.showAndWait();
-                            });
-                        }
-                    });
-                    installThread.setDaemon(true);
-                    installThread.start();
+                    try {
+                        UpdateChecker.installAndExit(
+                                UpdateChecker.getCurrentExecutable(), downloadedFile);
+                    } catch (IOException | IllegalStateException e) {
+                        e.printStackTrace();
+                        Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                        errorAlert.setTitle("Erreur");
+                        errorAlert.setHeaderText(null);
+                        errorAlert.setContentText("Erreur lors de l'installation: " + e.getMessage());
+                        errorAlert.showAndWait();
+                    }
                 });
             } catch (Exception e) {
                 e.printStackTrace();

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.multitools.tools.pdf.PdfMergeController"
+            stylesheets="@../style.css"
+            styleClass="root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT"
+              spacing="12"
+              prefHeight="82"
+              style="-fx-background-color: #f5f7f9;
+                     -fx-border-color: #cbd5df;
+                     -fx-border-width: 0 0 1 0;
+                     -fx-padding: 0 20 0 20;">
+            <Button text="← Retour"
+                    onAction="#handleBack"
+                    style="-fx-background-color: transparent;
+                           -fx-text-fill: #64748b;
+                           -fx-font-size: 14px;
+                           -fx-cursor: hand;
+                           -fx-padding: 8 12 8 12;"/>
+            <Label text="📑"
+                   style="-fx-font-family: 'Segoe UI Emoji';
+                          -fx-font-size: 20px;"/>
+            <VBox spacing="2">
+                <Label text="Fusionner des PDF"
+                       style="-fx-font-size: 20px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #111827;"/>
+                <Label text="Choisissez et ordonnez les fichiers à assembler"
+                       style="-fx-font-size: 14px;
+                              -fx-text-fill: #64748b;"/>
+            </VBox>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="16"
+              style="-fx-padding: 30 40 30 40;">
+            <Label text="Fichiers PDF (l'ordre de la liste sera conservé)"
+                   style="-fx-font-size: 15px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #1e293b;"/>
+            <HBox spacing="8">
+                <Button fx:id="addButton"
+                        text="Ajouter des PDF"
+                        onAction="#addFiles"
+                        styleClass="primary-button"/>
+                <Button fx:id="removeButton"
+                        text="Retirer"
+                        onAction="#removeSelected"
+                        styleClass="secondary-button"/>
+                <Button fx:id="upButton"
+                        text="Monter"
+                        onAction="#moveUp"
+                        styleClass="secondary-button"/>
+                <Button fx:id="downButton"
+                        text="Descendre"
+                        onAction="#moveDown"
+                        styleClass="secondary-button"/>
+            </HBox>
+            <ListView fx:id="fileList"
+                      VBox.vgrow="ALWAYS">
+                <placeholder>
+                    <Label text="Ajoutez au moins deux fichiers PDF"/>
+                </placeholder>
+            </ListView>
+            <HBox spacing="12"
+                  alignment="CENTER_LEFT">
+                <Button fx:id="mergeButton"
+                        text="Choisir la destination et fusionner"
+                        onAction="#mergeFiles"
+                        styleClass="primary-button"/>
+                <ProgressIndicator fx:id="progressIndicator"
+                                   prefWidth="28"
+                                   prefHeight="28"
+                                   visible="false"
+                                   managed="false"/>
+                <Label fx:id="statusLabel"
+                       wrapText="true"
+                       style="-fx-text-fill: #64748b;"/>
+            </HBox>
+        </VBox>
+    </center>
+
+</BorderPane>

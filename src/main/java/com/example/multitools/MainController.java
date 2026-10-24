@@ -108,6 +108,20 @@ public class MainController {
             showAlert("Erreur", "Impossible d'ouvrir le module Divers: " + e.getMessage());
         }
     }
+
+    @FXML
+    private void openPdfTool() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/pdf/pdf.fxml")
+            );
+            Parent root = loader.load();
+            NavigationManager.getInstance().navigateTo(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Erreur", "Impossible d'ouvrir le menu PDF: " + e.getMessage());
+        }
+    }
     
     @FXML
     private void handleUpdateCheck() {
