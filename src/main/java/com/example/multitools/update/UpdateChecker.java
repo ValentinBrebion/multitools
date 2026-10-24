@@ -156,12 +156,12 @@ public class UpdateChecker {
     public static void installAndExit(Path currentExe, Path installer) throws IOException {
         Path script = createUpdateScript(currentExe, installer);
 
-        new ProcessBuilder("cmd.exe", "/c", "start", "Multitools-Update", "/min",
-                "cmd.exe", "/c", script.toString())
-                .directory(script.getParent().toFile())
-                .redirectErrorStream(true)
-                .redirectOutput(script.resolveSibling("multitools-launcher.log").toFile())
-                .start();
+        new ProcessBuilder("cmd.exe", "/c", "start", "/min",
+            "cmd.exe", "/c", script.toString())
+            .directory(script.getParent().toFile())
+            .redirectErrorStream(true)
+            .redirectOutput(script.resolveSibling("multitools-launcher.log").toFile())
+            .start();
 
         Platform.exit();
         System.exit(0);
