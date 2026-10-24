@@ -20,6 +20,11 @@ public class PdfController {
     }
 
     @FXML
+    private void openStampTool() {
+        navigateTo("/fxml/pdf/pdf-stamp.fxml", "Impossible d'ouvrir le module d'ajout de tampon.");
+    }
+
+    @FXML
     private void handleBack() {
         navigateTo("/fxml/main.fxml", "Impossible de revenir au menu principal.");
     }
