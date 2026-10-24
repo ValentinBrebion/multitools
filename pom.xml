@@ -44,6 +44,13 @@
             <version>3.5.3</version>
         </dependency>
 
+        <!-- Rendu local et sécurisé des logos SVG -->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-transcoder</artifactId>
+            <version>1.18</version>
+        </dependency>
+
         <!-- Encodage WebP pour ImageIO -->
         <dependency>
             <groupId>org.sejda.imageio</groupId>

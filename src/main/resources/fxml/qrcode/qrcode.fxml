@@ -3,9 +3,13 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.geometry.Pos?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
@@ -36,45 +40,112 @@
     </top>
 
     <center>
-        <HBox spacing="24" alignment="TOP_CENTER" style="-fx-padding: 32;">
-            <VBox spacing="14" HBox.hgrow="ALWAYS" maxWidth="600"
-                  style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-padding: 24;">
-                <Label text="Contenu à encoder"
-                       style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                <TextArea fx:id="contentArea"
-                          promptText="Saisissez un texte, une URL ou toute autre information…"
-                          wrapText="true"
-                          prefRowCount="8"
-                          VBox.vgrow="ALWAYS"
-                          style="-fx-font-size: 14px;"/>
-                <HBox spacing="16" alignment="CENTER_LEFT">
-                    <VBox spacing="6" HBox.hgrow="ALWAYS">
-                        <Label text="Taille de l'image" style="-fx-font-weight: bold; -fx-text-fill: #52677d;"/>
-                        <ComboBox fx:id="sizeComboBox" maxWidth="Infinity"/>
-                    </VBox>
-                    <VBox spacing="6" HBox.hgrow="ALWAYS">
-                        <Label text="Correction d'erreurs" style="-fx-font-weight: bold; -fx-text-fill: #52677d;"/>
-                        <ComboBox fx:id="correctionComboBox" maxWidth="Infinity"/>
-                    </VBox>
-                </HBox>
-                <Button text="Générer le QR code"
-                        onAction="#handleGenerate"
-                        maxWidth="Infinity"
-                        styleClass="primary-button"/>
-            </VBox>
+        <HBox spacing="16" alignment="TOP_CENTER" style="-fx-padding: 24;">
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefWidth="600" maxWidth="600"
+                        style="-fx-background-color: transparent; -fx-background: transparent;">
+                <content>
+                    <VBox spacing="12"
+                          style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-padding: 20;">
+                        <Label text="Contenu à encoder"
+                               style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                        <TextArea fx:id="contentArea"
+                                  promptText="Saisissez un texte, une URL ou toute autre information…"
+                                  wrapText="true"
+                                  prefRowCount="3"
+                                  prefHeight="76"
+                                  minHeight="76"
+                                  maxHeight="76"
+                                  style="-fx-font-size: 14px;"/>
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="Taille de l'image" style="-fx-font-weight: bold; -fx-text-fill: #52677d;"/>
+                                <ComboBox fx:id="sizeComboBox" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="Correction d'erreurs" style="-fx-font-weight: bold; -fx-text-fill: #52677d;"/>
+                                <ComboBox fx:id="correctionComboBox" maxWidth="Infinity"/>
+                            </VBox>
+                        </HBox>
 
-            <VBox spacing="16" alignment="TOP_CENTER" prefWidth="390"
+                        <Label text="Personnalisation"
+                               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1e293b; -fx-padding: 6 0 0 0;"/>
+                        <VBox spacing="6">
+                            <Label text="Palette prédéfinie" style="-fx-font-weight: bold; -fx-text-fill: #52677d;"/>
+                            <ComboBox fx:id="paletteComboBox" maxWidth="Infinity"/>
+                        </VBox>
+                        <HBox spacing="12">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="Couleur des modules" style="-fx-text-fill: #52677d;"/>
+                                <ColorPicker fx:id="foregroundColorPicker" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="Couleur de fond" style="-fx-text-fill: #52677d;"/>
+                                <ColorPicker fx:id="backgroundColorPicker" maxWidth="Infinity"/>
+                            </VBox>
+                        </HBox>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <CheckBox fx:id="gradientCheckBox" text="Dégradé"/>
+                            <Label text="Deuxième couleur :" style="-fx-text-fill: #52677d;"/>
+                            <ColorPicker fx:id="gradientColorPicker" HBox.hgrow="ALWAYS"/>
+                        </HBox>
+                        <VBox spacing="5">
+                            <Label text="Forme des modules" style="-fx-font-weight: bold; -fx-text-fill: #52677d;"/>
+                            <ComboBox fx:id="shapeComboBox" maxWidth="Infinity"/>
+                        </VBox>
+
+                        <Label text="Logo au centre"
+                               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1e293b; -fx-padding: 6 0 0 0;"/>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Button text="Importer PNG / SVG" onAction="#handleImportLogo" styleClass="secondary-button"/>
+                            <Button fx:id="removeLogoButton" text="Supprimer" onAction="#handleRemoveLogo"
+                                    disable="true" styleClass="secondary-button"/>
+                            <Label fx:id="logoNameLabel" text="Aucun logo sélectionné" wrapText="true"
+                                   style="-fx-text-fill: #64748b;"/>
+                        </HBox>
+                        <HBox spacing="12">
+                            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                                <HBox spacing="6">
+                                    <Label text="Taille du logo" style="-fx-text-fill: #52677d;"/>
+                                    <Label fx:id="logoSizeValueLabel" text="18 %" style="-fx-text-fill: #52677d;"/>
+                                </HBox>
+                                <Slider fx:id="logoSizeSlider" min="10" max="25" value="18" blockIncrement="1"/>
+                            </VBox>
+                            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                                <HBox spacing="6">
+                                    <Label text="Marge du logo" style="-fx-text-fill: #52677d;"/>
+                                    <Label fx:id="logoMarginValueLabel" text="3 %" style="-fx-text-fill: #52677d;"/>
+                                </HBox>
+                                <Slider fx:id="logoMarginSlider" min="0" max="12" value="3" blockIncrement="1"/>
+                            </VBox>
+                        </HBox>
+                        <CheckBox fx:id="removeLogoBackgroundCheckBox"
+                                  text="Supprimer le fond blanc du logo"/>
+
+                        <Button text="Générer le QR code"
+                                onAction="#handleGenerate"
+                                maxWidth="Infinity"
+                                styleClass="primary-button"/>
+                    </VBox>
+                </content>
+            </ScrollPane>
+
+            <VBox spacing="14" alignment="TOP_CENTER" prefWidth="340" minWidth="320" maxWidth="340"
                   style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-padding: 24;">
                 <Label text="Aperçu" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                <VBox alignment="CENTER" minWidth="320" minHeight="320" prefWidth="320" prefHeight="320"
+                <VBox alignment="CENTER" minWidth="260" minHeight="260" prefWidth="260" prefHeight="260"
                       style="-fx-background-color: #f8fafc; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;">
-                    <ImageView fx:id="qrImageView" fitWidth="300" fitHeight="300" preserveRatio="true" smooth="false"/>
+                    <ImageView fx:id="qrImageView" fitWidth="250" fitHeight="250" preserveRatio="true" smooth="false"/>
                 </VBox>
                 <Label fx:id="statusLabel"
                        text="Votre QR code apparaîtra ici."
                        wrapText="true"
                        maxWidth="Infinity"
                        style="-fx-text-fill: #64748b; -fx-font-size: 13px;"/>
+                <VBox spacing="5" maxWidth="Infinity">
+                    <Label text="Format d'enregistrement"
+                           style="-fx-font-weight: bold; -fx-text-fill: #52677d;"/>
+                    <ComboBox fx:id="outputFormatComboBox" maxWidth="Infinity"/>
+                </VBox>
                 <Button fx:id="saveButton"
                         text="Enregistrer en PNG"
                         onAction="#handleSave"

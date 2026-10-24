@@ -1,5 +1,8 @@
 package com.example.multitools;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
 import com.example.multitools.core.NavigationManager;
 import com.example.multitools.core.ToolManager;
 import com.example.multitools.tools.compression.CompressionTool;
@@ -7,6 +10,8 @@ import com.example.multitools.tools.image.ImageTool;
 import com.example.multitools.tools.qrcode.QRCodeTool;
 import com.example.multitools.tools.text.TextTool;
 import com.example.multitools.update.UpdateChecker;
+
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -154,64 +159,55 @@ public class MainController {
         });
     }
 
-    private void startUpdateProcess(com.example.multitools.update.UpdateChecker.UpdateInfo updateInfo) {
-        Alert progressAlert = new Alert(Alert.AlertType.INFORMATION);
-        progressAlert.setTitle("Téléchargement de la mise à jour");
-        progressAlert.setHeaderText("Téléchargement en cours...");
-        progressAlert.setContentText("Veuillez patienter pendant le téléchargement de la mise à jour.");
+    private void startUpdateProcess(UpdateChecker.UpdateInfo info) {
+        // On vérifie tout de suite qu'on peut se mettre à jour (évite de télécharger en mode dev)
+        final Path currentExe;
+        try {
+            currentExe = UpdateChecker.getCurrentExecutable();
+        } catch (IllegalStateException e) {
+            showAlert("Mise à jour", e.getMessage());
+            return;
+        }
 
-        ProgressBar progressBar = new ProgressBar();
+        ProgressBar progressBar = new ProgressBar(0);
         progressBar.setPrefWidth(300);
 
-        VBox content = new VBox(10, new Label("Progression:"), progressBar);
-        progressAlert.getDialogPane().setContent(content);
+        Alert progressAlert = new Alert(Alert.AlertType.INFORMATION);
+        progressAlert.setTitle("Mise à jour");
+        progressAlert.setHeaderText("Téléchargement de Multitools " + info.latestVersion + "...");
+        progressAlert.getDialogPane().setContent(new VBox(10, new Label("Progression :"), progressBar));
         progressAlert.initModality(Modality.APPLICATION_MODAL);
         progressAlert.show();
 
-        Thread downloadThread = new Thread(() -> {
+        Task<Path> download = new Task<>() {
+            @Override
+            protected Path call() throws Exception {
+                // updateProgress est thread-safe ; une valeur négative = barre indéterminée
+                return new UpdateChecker().downloadUpdate(info.downloadUrl,
+                        p -> updateProgress(p < 0 ? -1 : p, 1));
+            }
+        };
+        progressBar.progressProperty().bind(download.progressProperty());
+
+        download.setOnSucceeded(e -> {
+            progressAlert.close();
             try {
-                com.example.multitools.update.UpdateChecker checker = new com.example.multitools.update.UpdateChecker();
-                java.nio.file.Path downloadedFile = checker.downloadUpdate(updateInfo.downloadUrl, progress -> {
-                    javafx.application.Platform.runLater(() -> {
-                        if (progress >= 0) {
-                            progressBar.setProgress(progress);
-                        } else {
-                            progressBar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
-                        }
-                    });
-                });
-
-                javafx.application.Platform.runLater(() -> {
-                    progressAlert.close();
-                    showAlert("Téléchargement terminé", "Le fichier a été téléchargé avec succès. L'application va maintenant s'installer et redémarrer.");
-
-                    Thread installThread = new Thread(() -> {
-                        try {
-                            String currentExePath = com.example.multitools.update.UpdateChecker.getCurrentExecutablePath();
-                            java.nio.file.Path currentExe = java.nio.file.Path.of(currentExePath);
-                            java.nio.file.Path scriptPath = checker.createUpdateScript(currentExe, downloadedFile);
-                            com.example.multitools.update.UpdateChecker.runUpdateScriptAndExit(scriptPath, currentExe);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            javafx.application.Platform.runLater(() -> {
-                                showAlert("Erreur", "Erreur lors de l'installation: " + e.getMessage());
-                            });
-                        }
-                    });
-                    installThread.setDaemon(true);
-                    installThread.start();
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                javafx.application.Platform.runLater(() -> {
-                    progressAlert.close();
-                    showAlert("Erreur", "Erreur lors du téléchargement: " + e.getMessage());
-                });
+                UpdateChecker.installAndExit(currentExe, download.getValue());
+            } catch (IOException ex) {
+                showAlert("Erreur", "Impossible de lancer l'installation : " + ex.getMessage());
             }
         });
-        downloadThread.setDaemon(true);
-        downloadThread.start();
+        download.setOnFailed(e -> {
+            progressAlert.close();
+            showAlert("Erreur", "Erreur lors du téléchargement : " + download.getException().getMessage());
+        });
+
+        Thread thread = new Thread(download, "multitools-update-download");
+        thread.setDaemon(true);
+        thread.start();
     }
+
+    
     
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
