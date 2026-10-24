@@ -2,12 +2,13 @@ package com.example.multitools;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.text.Normalizer;
+import java.util.Locale;
 
 import com.example.multitools.core.NavigationManager;
 import com.example.multitools.core.ToolManager;
 import com.example.multitools.tools.compression.CompressionTool;
 import com.example.multitools.tools.image.ImageTool;
-import com.example.multitools.tools.qrcode.QRCodeTool;
 import com.example.multitools.tools.text.TextTool;
 import com.example.multitools.update.UpdateChecker;
 
@@ -19,6 +20,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
+import javafx.scene.Node;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 
@@ -26,6 +29,12 @@ public class MainController {
     
     @FXML
     private TextField searchField;
+
+    @FXML
+    private FlowPane toolCards;
+
+    @FXML
+    private Label noResultsLabel;
 
     @FXML
     private Label versionLabel;
@@ -37,6 +46,45 @@ public class MainController {
         // Initialiser les gestionnaires
         NavigationManager.getInstance();
         ToolManager.getInstance();
+
+        searchField.textProperty().addListener((observable, oldValue, newValue) ->
+                filterToolCards(newValue));
+    }
+
+    private void filterToolCards(String query) {
+        String normalizedQuery = normalize(query == null ? "" : query.trim());
+        boolean hasVisibleCard = false;
+
+        for (Node card : toolCards.getChildren()) {
+            boolean matches = normalizedQuery.isEmpty()
+                    || normalize(getCardText(card)).contains(normalizedQuery);
+            card.setVisible(matches);
+            card.setManaged(matches);
+            hasVisibleCard |= matches;
+        }
+
+        noResultsLabel.setVisible(!hasVisibleCard);
+        noResultsLabel.setManaged(!hasVisibleCard);
+    }
+
+    private String getCardText(Node node) {
+        if (node instanceof Label label) {
+            return label.getText() == null ? "" : label.getText();
+        }
+        if (node instanceof Parent parent) {
+            StringBuilder text = new StringBuilder();
+            for (Node child : parent.getChildrenUnmodifiable()) {
+                text.append(getCardText(child)).append(' ');
+            }
+            return text.toString();
+        }
+        return "";
+    }
+
+    private String normalize(String text) {
+        return Normalizer.normalize(text, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase(Locale.ROOT);
     }
     
     @FXML
@@ -86,11 +134,6 @@ public class MainController {
             e.printStackTrace();
             showAlert("Erreur", "Impossible d'ouvrir l'outil de sécurité: " + e.getMessage());
         }
-    }
-
-    @FXML
-    private void openQRCodeTool() {
-        new QRCodeTool().open();
     }
 
     @FXML

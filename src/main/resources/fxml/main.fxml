@@ -76,9 +76,39 @@
                   style="-fx-padding: 30 40 40 40;">
 
                 <!-- Grille d'outils -->
-                <FlowPane hgap="20"
+                <FlowPane fx:id="toolCards"
+                          hgap="20"
                           vgap="20"
                           alignment="TOP_CENTER">
+
+                    <!-- Carte PDF -->
+                    <VBox spacing="12"
+                          prefWidth="280"
+                          prefHeight="180"
+                          styleClass="tool-card"
+                          style="-fx-padding: 24;"
+                          onMouseClicked="#openPdfTool">
+
+                        <HBox alignment="CENTER_LEFT" spacing="16">
+                            <Label text="📄"
+                                   style="-fx-font-family: 'Segoe UI Emoji';
+                                          -fx-font-size: 32px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                        </HBox>
+
+                        <VBox spacing="4">
+                            <Label text="PDF"
+                                   style="-fx-font-size: 18px;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #1e293b;
+                                          -fx-font-family: 'Segoe UI', sans-serif;"/>
+                            <Label text="Fusionner et protéger des documents PDF"
+                                   style="-fx-font-size: 13px;
+                                          -fx-text-fill: #64748b;
+                                          -fx-font-family: 'Segoe UI', sans-serif;"/>
+                        </VBox>
+
+                    </VBox>
 
                     <!-- Carte Compression -->
                     <VBox spacing="12"
@@ -159,7 +189,7 @@
                                           -fx-font-weight: bold;
                                           -fx-text-fill: #1e293b;
                                           -fx-font-family: 'Segoe UI', sans-serif;"/>
-                            <Label text="Outils complémentaires"
+                            <Label text="Convertisseur et générateur de QR code"
                                    style="-fx-font-size: 13px;
                                           -fx-text-fill: #64748b;
                                           -fx-font-family: 'Segoe UI', sans-serif;"/>
@@ -196,65 +226,14 @@
 
                     </VBox>
 
-                    <!-- Carte PDF -->
-                    <VBox spacing="12"
-                          prefWidth="280"
-                          prefHeight="180"
-                          styleClass="tool-card"
-                          style="-fx-padding: 24;"
-                          onMouseClicked="#openPdfTool">
-
-                        <HBox alignment="CENTER_LEFT" spacing="16">
-                            <Label text="📄"
-                                   style="-fx-font-family: 'Segoe UI Emoji';
-                                          -fx-font-size: 32px;"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                        </HBox>
-
-                        <VBox spacing="4">
-                            <Label text="PDF"
-                                   style="-fx-font-size: 18px;
-                                          -fx-font-weight: bold;
-                                          -fx-text-fill: #1e293b;
-                                          -fx-font-family: 'Segoe UI', sans-serif;"/>
-                            <Label text="Fusionner des documents PDF"
-                                   style="-fx-font-size: 13px;
-                                          -fx-text-fill: #64748b;
-                                          -fx-font-family: 'Segoe UI', sans-serif;"/>
-                        </VBox>
-
-                    </VBox>
-
-                    <!-- Carte Générateur de QR code -->
-                    <VBox spacing="12"
-                          prefWidth="280"
-                          prefHeight="180"
-                          styleClass="tool-card"
-                          style="-fx-padding: 24;"
-                          onMouseClicked="#openQRCodeTool">
-
-                        <HBox alignment="CENTER_LEFT" spacing="16">
-                            <Label text="▦"
-                                   style="-fx-font-size: 32px;
-                                          -fx-text-fill: #087edb;"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                        </HBox>
-
-                        <VBox spacing="4">
-                            <Label text="Générateur de QR code"
-                                   style="-fx-font-size: 18px;
-                                          -fx-font-weight: bold;
-                                          -fx-text-fill: #1e293b;
-                                          -fx-font-family: 'Segoe UI', sans-serif;"/>
-                            <Label text="Créer et exporter des QR codes"
-                                   style="-fx-font-size: 13px;
-                                          -fx-text-fill: #64748b;
-                                          -fx-font-family: 'Segoe UI', sans-serif;"/>
-                        </VBox>
-
-                    </VBox>
-
                 </FlowPane>
+
+                <Label fx:id="noResultsLabel"
+                       text="Aucun outil correspondant à votre recherche."
+                       visible="false"
+                       managed="false"
+                       style="-fx-font-size: 14px;
+                              -fx-text-fill: #64748b;"/>
 
             </VBox>
 
