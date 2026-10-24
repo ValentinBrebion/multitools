@@ -36,6 +36,11 @@ Application de bureau Java modulaire offrant plusieurs outils utilitaires.
 ### Module Divers
 - Convertisseur d'unités
 
+### Module PDF
+- Fusionner plusieurs fichiers PDF en choisissant l'ordre des documents
+- Protéger un PDF avec un mot de passe requis à l'ouverture (chiffrement AES 256 bits)
+- Protéger un PDF déjà chiffré en fournissant son mot de passe actuel
+
 ## Prérequis
 
 - Java 21 ou supérieur
@@ -78,6 +83,7 @@ java -jar target/multitools-1.2.0.jar
 - JavaFX 21.0.6 - Framework d'interface graphique
 - Java 21 - Langage de programmation
 - Maven - Gestion des dépendances
+- Apache PDFBox - Fusion et protection des fichiers PDF
 
 ## Architecture
 

@@ -15,6 +15,11 @@ public class PdfController {
     }
 
     @FXML
+    private void openProtectionTool() {
+        navigateTo("/fxml/pdf/pdf-protect.fxml", "Impossible d'ouvrir le module de protection PDF.");
+    }
+
+    @FXML
     private void handleBack() {
         navigateTo("/fxml/main.fxml", "Impossible de revenir au menu principal.");
     }

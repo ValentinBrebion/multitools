@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.multitools.tools.pdf.PdfProtectController"
+            stylesheets="@../style.css"
+            styleClass="root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT"
+              spacing="12"
+              prefHeight="82"
+              style="-fx-background-color: #f5f7f9;
+                     -fx-border-color: #cbd5df;
+                     -fx-border-width: 0 0 1 0;
+                     -fx-padding: 0 20 0 20;">
+            <Button text="← Retour"
+                    onAction="#handleBack"
+                    style="-fx-background-color: transparent;
+                           -fx-text-fill: #64748b;
+                           -fx-font-size: 14px;
+                           -fx-cursor: hand;
+                           -fx-padding: 8 12 8 12;"/>
+            <Label text="🔐"
+                   style="-fx-font-family: 'Segoe UI Emoji';
+                          -fx-font-size: 20px;"/>
+            <VBox spacing="2">
+                <Label text="Protéger un PDF"
+                       style="-fx-font-size: 20px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #111827;"/>
+                <Label text="Chiffrer le document avec un mot de passe à l'ouverture"
+                       style="-fx-font-size: 14px;
+                              -fx-text-fill: #64748b;"/>
+            </VBox>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="16"
+              maxWidth="620"
+              BorderPane.alignment="CENTER"
+              style="-fx-padding: 30 40 30 40;">
+            <Label text="Document PDF"
+                   style="-fx-font-size: 15px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #1e293b;"/>
+            <HBox spacing="8">
+                <TextField fx:id="inputPathField"
+                           promptText="Sélectionnez le fichier PDF à protéger"
+                           editable="false"
+                           HBox.hgrow="ALWAYS"/>
+                <Button text="Parcourir..."
+                        onAction="#chooseInput"
+                        styleClass="secondary-button"/>
+            </HBox>
+
+            <Label text="Mot de passe actuel (si le PDF est déjà protégé)"
+                   style="-fx-font-size: 14px;
+                          -fx-text-fill: #334155;"/>
+            <PasswordField fx:id="currentPasswordField"
+                           promptText="Laissez vide si le PDF n'est pas protégé"/>
+
+            <Separator/>
+
+            <Label text="Nouveau mot de passe"
+                   style="-fx-font-size: 14px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #1e293b;"/>
+            <PasswordField fx:id="passwordField"
+                           promptText="Mot de passe requis pour ouvrir le PDF"/>
+            <PasswordField fx:id="confirmPasswordField"
+                           promptText="Confirmez le nouveau mot de passe"/>
+            <Label text="Utilisez un mot de passe robuste et conservez-le : il sera nécessaire pour ouvrir le document."
+                   wrapText="true"
+                   style="-fx-font-size: 13px;
+                          -fx-text-fill: #64748b;"/>
+
+            <HBox spacing="12"
+                  alignment="CENTER_LEFT">
+                <Button fx:id="protectButton"
+                        text="Choisir la destination et protéger"
+                        onAction="#protectPdf"
+                        styleClass="primary-button"/>
+                <ProgressIndicator fx:id="progressIndicator"
+                                   prefWidth="28"
+                                   prefHeight="28"
+                                   visible="false"
+                                   managed="false"/>
+                <Label fx:id="statusLabel"
+                       wrapText="true"
+                       style="-fx-text-fill: #64748b;"/>
+            </HBox>
+        </VBox>
+    </center>
+
+</BorderPane>
