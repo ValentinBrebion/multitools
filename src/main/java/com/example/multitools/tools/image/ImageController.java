@@ -27,6 +27,19 @@ public class ImageController {
     }
 
     @FXML
+    private void openBackgroundRemoval() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/image/image-background-removal.fxml")
+            );
+            Parent root = loader.load();
+            NavigationManager.getInstance().navigateTo(root);
+        } catch (Exception e) {
+            showNavigationError("Impossible d'ouvrir l'outil de retrait du fond blanc", e);
+        }
+    }
+
+    @FXML
     private void handleBack() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main.fxml"));

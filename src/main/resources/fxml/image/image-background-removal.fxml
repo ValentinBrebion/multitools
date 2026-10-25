@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.multitools.tools.image.ImageBackgroundRemovalController"
+            stylesheets="@../style.css"
+            styleClass="root">
+    <top>
+        <HBox alignment="CENTER_LEFT"
+              spacing="12"
+              prefHeight="82"
+              style="-fx-background-color: #f5f7f9;
+                     -fx-border-color: #cbd5df;
+                     -fx-border-width: 0 0 1 0;
+                     -fx-padding: 0 20 0 20;">
+            <Button text="← Retour"
+                    onAction="#handleBack"
+                    style="-fx-background-color: transparent;
+                           -fx-text-fill: #64748b;
+                           -fx-font-size: 14px;
+                           -fx-cursor: hand;
+                           -fx-padding: 8 12 8 12;"/>
+            <Region prefWidth="10"/>
+            <Label text="◐"
+                   style="-fx-font-size: 24px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #087edb;"/>
+            <VBox spacing="2">
+                <Label text="Retirer le fond blanc"
+                       style="-fx-font-size: 20px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #111827;"/>
+                <Label text="Rendez le fond blanc transparent et exportez l'image en PNG"
+                       style="-fx-font-size: 14px;
+                              -fx-text-fill: #64748b;"/>
+            </VBox>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true"
+                    fitToHeight="true"
+                    style="-fx-background-color: #f8fafc;
+                           -fx-border-color: transparent;">
+            <VBox alignment="TOP_CENTER"
+                  style="-fx-padding: 32;">
+                <VBox spacing="18"
+                      maxWidth="720"
+                      style="-fx-background-color: white;
+                             -fx-background-radius: 12;
+                             -fx-border-color: #e2e8f0;
+                             -fx-border-radius: 12;
+                             -fx-padding: 28;">
+                    <Label text="Photo à traiter"
+                           style="-fx-font-size: 16px;
+                                  -fx-font-weight: bold;
+                                  -fx-text-fill: #1e293b;"/>
+                    <StackPane fx:id="dropZone"
+                               minHeight="190"
+                               prefHeight="190"
+                               style="-fx-background-color: white;
+                                      -fx-border-color: #cbd5df;
+                                      -fx-border-width: 1;
+                                      -fx-border-radius: 10;
+                                      -fx-background-radius: 10;
+                                      -fx-cursor: hand;">
+                        <VBox fx:id="emptyState"
+                              alignment="CENTER"
+                              spacing="10">
+                            <Label text="⇧"
+                                   style="-fx-text-fill: #087edb;
+                                          -fx-font-size: 32px;
+                                          -fx-font-weight: bold;"/>
+                            <Label text="Glissez-déposez une image ici"
+                                   style="-fx-font-size: 16px;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #334155;"/>
+                            <Label text="ou cliquez pour parcourir les fichiers"
+                                   style="-fx-font-size: 13px;
+                                          -fx-text-fill: #64748b;"/>
+                            <Label text="PNG, JPG, GIF, BMP ou WebP"
+                                   style="-fx-font-size: 12px;
+                                          -fx-text-fill: #94a3b8;"/>
+                        </VBox>
+                        <Label fx:id="selectedFileLabel"
+                               visible="false"
+                               managed="false"
+                               wrapText="true"
+                               maxWidth="600"
+                               style="-fx-font-size: 16px;
+                                      -fx-font-weight: bold;
+                                      -fx-text-fill: #087edb;"/>
+                    </StackPane>
+
+                    <Label text="Aperçu du résultat"
+                           style="-fx-font-size: 16px;
+                                  -fx-font-weight: bold;
+                                  -fx-text-fill: #1e293b;"/>
+                    <StackPane maxWidth="400"
+                               minHeight="220"
+                               prefHeight="220"
+                               style="-fx-border-color: #cbd5df;
+                                      -fx-border-width: 1;
+                                      -fx-border-radius: 8;
+                                      -fx-background-radius: 8;">
+                        <Canvas fx:id="previewCheckerboard"
+                                width="400"
+                                height="220"/>
+                        <ImageView fx:id="previewImageView"
+                                   fitWidth="400"
+                                   fitHeight="220"
+                                   preserveRatio="true"
+                                   smooth="true"/>
+                        <Label fx:id="previewPlaceholder"
+                               text="L'aperçu de l'image apparaîtra ici."
+                               wrapText="true"
+                               style="-fx-padding: 12;
+                                      -fx-background-color: rgba(255,255,255,0.85);
+                                      -fx-text-fill: #64748b;"/>
+                    </StackPane>
+                    <Label text="Le fond est estimé depuis les coins supérieurs pour mieux préserver le sujet. Le damier représente les zones transparentes."
+                           wrapText="true"
+                           style="-fx-font-size: 13px;
+                                  -fx-text-fill: #64748b;"/>
+
+                    <Label text="Fichier PNG de destination"
+                           style="-fx-font-size: 16px;
+                                  -fx-font-weight: bold;
+                                  -fx-text-fill: #1e293b;"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <TextField fx:id="destinationField"
+                                   promptText="Choisissez où enregistrer l'image transparente"
+                                   editable="false"
+                                   HBox.hgrow="ALWAYS"/>
+                        <Button text="Parcourir…"
+                                onAction="#chooseDestination"
+                                styleClass="secondary-button"/>
+                    </HBox>
+
+                    <Label fx:id="statusLabel"
+                           text="La tolérance adoucit les contours des zones blanches. Le résultat est enregistré en PNG transparent."
+                           wrapText="true"
+                           style="-fx-text-fill: #64748b;
+                                  -fx-font-size: 13px;"/>
+                    <Button fx:id="removeButton"
+                            text="Retirer le fond blanc"
+                            onAction="#removeBackground"
+                            maxWidth="Infinity"
+                            disable="true"
+                            styleClass="primary-button"/>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>
