@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -156,13 +157,15 @@ public class UpdateChecker {
     public static void installAndExit(Path currentExe, Path installer) throws IOException {
         Path script = createUpdateScript(currentExe, installer);
 
-        // Pas de titre après "start" : sans guillemets, cmd le prendrait pour le programme à lancer
-        new ProcessBuilder("cmd.exe", "/c", "start", "/min",
-                "cmd.exe", "/c", script.toString())
-                .directory(script.getParent().toFile())
-                .redirectErrorStream(true)
-                .redirectOutput(script.resolveSibling("multitools-launcher.log").toFile())
-                .start();
+        // wscript est une appli graphique : il lance le .bat dans une console masquée (style 0),
+        // sans aucune fenêtre ni clignotement. Le .vbs est supprimé par le .bat à la fin.
+        String name = script.getFileName().toString();
+        Path vbs = script.resolveSibling(name.substring(0, name.length() - 4) + ".vbs");
+        Files.writeString(vbs,
+                "CreateObject(\"WScript.Shell\").Run \"cmd.exe /c \"\"" + script + "\"\"\", 0, False",
+                Charset.forName(System.getProperty("native.encoding", "windows-1252")));
+
+        new ProcessBuilder("wscript.exe", "//Nologo", vbs.toString()).start();
 
         Platform.exit();
         System.exit(0);
@@ -197,7 +200,7 @@ public class UpdateChecker {
                 "if !errorlevel! equ 0 goto stillrunning",
                 "",
                 "echo Installation silencieuse >> \"%LOG%\"",
-                "start \"\" /wait \"%INSTALLER%\" /SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /LOG=\"%ILOG%\"",
+                "start \"\" /wait \"%INSTALLER%\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /LOG=\"%ILOG%\"",
                 "set RC=!errorlevel!",
                 "echo Code retour installateur: !RC! >> \"%LOG%\"",
                 "if !RC! neq 0 goto interactive",
@@ -218,6 +221,7 @@ public class UpdateChecker {
                 "",
                 ":end",
                 "echo [%date% %time%] Script termine >> \"%LOG%\"",
+                "del \"%~dpn0.vbs\" >nul 2>&1",
                 "(goto) 2>nul & del \"%~f0\"",
                 "");
 
