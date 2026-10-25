@@ -156,12 +156,13 @@ public class UpdateChecker {
     public static void installAndExit(Path currentExe, Path installer) throws IOException {
         Path script = createUpdateScript(currentExe, installer);
 
+        // Pas de titre après "start" : sans guillemets, cmd le prendrait pour le programme à lancer
         new ProcessBuilder("cmd.exe", "/c", "start", "/min",
-            "cmd.exe", "/c", script.toString())
-            .directory(script.getParent().toFile())
-            .redirectErrorStream(true)
-            .redirectOutput(script.resolveSibling("multitools-launcher.log").toFile())
-            .start();
+                "cmd.exe", "/c", script.toString())
+                .directory(script.getParent().toFile())
+                .redirectErrorStream(true)
+                .redirectOutput(script.resolveSibling("multitools-launcher.log").toFile())
+                .start();
 
         Platform.exit();
         System.exit(0);
@@ -183,6 +184,7 @@ public class UpdateChecker {
                 "set \"CURRENT=" + currentExe.toAbsolutePath() + "\"",
                 "set \"INSTALLER=" + installer.toAbsolutePath() + "\"",
                 "set \"LOG=" + log.toAbsolutePath() + "\"",
+                "set \"ILOG=" + log.resolveSibling("multitools-installer.log").toAbsolutePath() + "\"",
                 "set \"IMG=" + currentExe.getFileName() + "\"",
                 "set /a TRIES=0",
                 "echo [%date% %time%] Script demarre > \"%LOG%\"",
@@ -195,7 +197,7 @@ public class UpdateChecker {
                 "if !errorlevel! equ 0 goto stillrunning",
                 "",
                 "echo Installation silencieuse >> \"%LOG%\"",
-                "start \"\" /wait \"%INSTALLER%\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS",
+                "start \"\" /wait \"%INSTALLER%\" /SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /LOG=\"%ILOG%\"",
                 "set RC=!errorlevel!",
                 "echo Code retour installateur: !RC! >> \"%LOG%\"",
                 "if !RC! neq 0 goto interactive",

@@ -65,6 +65,17 @@
             <ComboBox fx:id="stampChoice"
                       maxWidth="Infinity"
                       promptText="Choisissez un tampon"/>
+            <VBox fx:id="customStampContainer"
+                  spacing="8"
+                  visible="false"
+                  managed="false">
+                <Label text="Texte du tampon personnalisé"
+                       style="-fx-font-size: 14px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #1e293b;"/>
+                <TextField fx:id="customStampField"
+                           promptText="Saisissez le texte à afficher"/>
+            </VBox>
             <Label text="Le tampon sera placé en diagonale au centre de chaque page."
                    wrapText="true"
                    style="-fx-font-size: 13px;

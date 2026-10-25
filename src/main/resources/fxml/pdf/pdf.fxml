@@ -116,7 +116,7 @@
                                           -fx-font-weight: bold;
                                           -fx-text-fill: #1e293b;
                                           -fx-font-family: 'Segoe UI', sans-serif;"/>
-                            <Label text="Insérer CONFIDENTIEL ou BROUILLON"
+                            <Label text="CONFIDENTIEL, BROUILLON, DUPLICATA ou texte personnalisé"
                                    style="-fx-font-size: 13px;
                                           -fx-text-fill: #64748b;
                                           -fx-font-family: 'Segoe UI', sans-serif;"/>

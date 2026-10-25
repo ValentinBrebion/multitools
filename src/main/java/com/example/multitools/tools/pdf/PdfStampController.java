@@ -2,6 +2,7 @@ package com.example.multitools.tools.pdf;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import com.example.multitools.core.NavigationManager;
 import javafx.concurrent.Task;
@@ -15,9 +16,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
 public class PdfStampController {
+
+    private static final String CUSTOM_STAMP = "Personnalisé";
 
     @FXML
     private TextField inputPathField;
@@ -25,6 +29,10 @@ public class PdfStampController {
     private PasswordField passwordField;
     @FXML
     private ComboBox<String> stampChoice;
+    @FXML
+    private VBox customStampContainer;
+    @FXML
+    private TextField customStampField;
     @FXML
     private Button stampButton;
     @FXML
@@ -36,8 +44,13 @@ public class PdfStampController {
 
     @FXML
     private void initialize() {
-        stampChoice.getItems().setAll("CONFIDENTIEL", "BROUILLON");
+        stampChoice.getItems().setAll("CONFIDENTIEL", "BROUILLON", "DUPLICATA", CUSTOM_STAMP);
         stampChoice.getSelectionModel().selectFirst();
+        stampChoice.valueProperty().addListener((observable, oldValue, newValue) -> {
+            boolean customStamp = CUSTOM_STAMP.equals(newValue);
+            customStampContainer.setVisible(customStamp);
+            customStampContainer.setManaged(customStamp);
+        });
     }
 
     @FXML
@@ -61,18 +74,29 @@ public class PdfStampController {
             return;
         }
 
-        String stampText = stampChoice.getValue();
-        if (stampText == null) {
+        String selectedStamp = stampChoice.getValue();
+        if (selectedStamp == null) {
             showError("Choisissez un tampon.");
             return;
+        }
+        String stampText = CUSTOM_STAMP.equals(selectedStamp)
+                ? (customStampField.getText() == null ? "" : customStampField.getText().trim())
+                : selectedStamp;
+        if (CUSTOM_STAMP.equals(selectedStamp)) {
+            if (stampText.isEmpty()) {
+                showError("Saisissez le texte du tampon personnalisé.");
+                return;
+            }
         }
 
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Enregistrer le PDF tamponné");
         chooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Document PDF", "*.pdf"));
+        String fileStamp = CUSTOM_STAMP.equals(selectedStamp)
+                ? "personnalise" : stampText.toLowerCase(Locale.ROOT);
         chooser.setInitialFileName(inputFile.getFileName().toString()
-                .replaceFirst("(?i)\\.pdf$", "") + "-" + stampText.toLowerCase() + ".pdf");
+                .replaceFirst("(?i)\\.pdf$", "") + "-" + fileStamp + ".pdf");
         File destination = chooser.showSaveDialog(NavigationManager.getInstance().getPrimaryStage());
         if (destination == null) {
             return;
@@ -133,6 +157,7 @@ public class PdfStampController {
         inputPathField.setDisable(busy);
         passwordField.setDisable(busy);
         stampChoice.setDisable(busy);
+        customStampField.setDisable(busy);
         progressIndicator.setVisible(busy);
         progressIndicator.setManaged(busy);
     }

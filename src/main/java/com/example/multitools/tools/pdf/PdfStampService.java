@@ -23,8 +23,8 @@ public class PdfStampService {
         if (inputFile == null || !Files.isRegularFile(inputFile) || !Files.isReadable(inputFile)) {
             throw new IOException("Le fichier PDF source est introuvable ou illisible.");
         }
-        if (!"CONFIDENTIEL".equals(stampText) && !"BROUILLON".equals(stampText)) {
-            throw new IllegalArgumentException("Choisissez le tampon CONFIDENTIEL ou BROUILLON.");
+        if (stampText == null || stampText.isBlank()) {
+            throw new IllegalArgumentException("Le texte du tampon ne peut pas être vide.");
         }
         if (outputFile == null || outputFile.getFileName() == null
                 || !outputFile.getFileName().toString().toLowerCase().endsWith(".pdf")) {
