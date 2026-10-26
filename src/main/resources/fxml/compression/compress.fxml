@@ -37,12 +37,12 @@
               -fx-font-size: 20px;"/>
 
                 <VBox spacing="2">
-                        <Label text="Compression"
+                        <Label text="Convertisseur"
                         style="-fx-font-size: 20px;
                                 -fx-font-weight: bold;
                                 -fx-text-fill: #111827;"/>
 
-                        <Label text="Compresseur de fichiers"
+                        <Label text="Archives ZIP et conversion ODT en PDF"
                         style="-fx-font-size: 14px;
                                 -fx-text-fill: #64748b;"/>
                 </VBox>
@@ -89,7 +89,8 @@
                                -fx-padding: 0 20 0 20;
                                -fx-cursor: hand;"/>
 
-                <Button text="📁​  Ajouter un dossier"
+                <Button fx:id="addDirectoryButton"
+                        text="📁​  Ajouter un dossier"
                         onAction="#handleAddDirectory"
                         prefHeight="45"
                         style="-fx-background-color: white;
@@ -148,7 +149,8 @@
                       -fx-text-fill: #64748b;"/>
 
         <!-- Formats acceptés -->
-        <Label text="Tous les formats sont acceptés"
+        <Label fx:id="formatsLabel"
+               text="Tous les formats sont acceptés"
                style="-fx-font-size: 12px;
                       -fx-text-fill: #94a3b8;"/>
     </VBox>
@@ -178,7 +180,7 @@
                 <VBox spacing="6"
                       HBox.hgrow="ALWAYS">
 
-                    <Label text="Nom de l'archive"
+                    <Label text="Nom du fichier"
                            style="-fx-font-size: 14px;
                                   -fx-text-fill: #52677d;"/>
 
@@ -192,18 +194,30 @@
                 </VBox>
 
 
-                <!-- Extension -->
-                <VBox alignment="BOTTOM_LEFT"
-                      prefWidth="45">
-
-                    <Label text=".zip"
-                           style="-fx-font-size: 15px;
+                <!-- Format de sortie -->
+                <VBox spacing="6">
+                    <Label text="Format"
+                           style="-fx-font-size: 14px;
                                   -fx-text-fill: #52677d;"/>
+                    <ComboBox fx:id="outputFormatComboBox"
+                              prefWidth="115"
+                              prefHeight="47"
+                              style="-fx-background-color: white;
+                                     -fx-border-color: #b9c6d3;
+                                     -fx-border-radius: 8;
+                                     -fx-background-radius: 8;
+                                     -fx-font-size: 16px;"/>
+                    <Label fx:id="pdfNoticeLabel"
+                           text="Rendu texte et mise en page simple"
+                           visible="false"
+                           managed="false"
+                           style="-fx-font-size: 11px;
+                                  -fx-text-fill: #b45309;"/>
                 </VBox>
 
 
                 <!-- Compression -->
-                <VBox spacing="6">
+                <VBox fx:id="compressionOptions" spacing="6">
 
                     <Label text="Compression"
                            style="-fx-font-size: 14px;

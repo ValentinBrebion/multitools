@@ -11,12 +11,12 @@ public class CompressionTool implements Tool {
 
     @Override
     public String getName() {
-        return "Compression";
+        return "Convertisseur";
     }
 
     @Override
     public String getDescription() {
-        return "Compresser et décompresser des fichiers";
+        return "Créer des archives ZIP et sélectionner des fichiers ODT pour PDF";
     }
 
     @Override
@@ -41,7 +41,7 @@ public class CompressionTool implements Tool {
             
             Scene scene = new Scene(root, 950, 700);
             
-            stage.setTitle("Compression - Multitools");
+            stage.setTitle("Convertisseur - Multitools");
             stage.setScene(scene);
             
             stage.setMinWidth(850);

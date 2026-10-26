@@ -4,6 +4,7 @@ import com.example.multitools.core.NavigationManager;
 import com.example.multitools.update.UpdateChecker;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
@@ -18,14 +19,13 @@ import javafx.scene.Scene;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.layout.Region;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class CompressionController {
     
@@ -52,6 +52,21 @@ public class CompressionController {
     
     @FXML
     private Button compressButton;
+
+    @FXML
+    private Button addDirectoryButton;
+
+    @FXML
+    private ComboBox<String> outputFormatComboBox;
+
+    @FXML
+    private VBox compressionOptions;
+
+    @FXML
+    private Label formatsLabel;
+
+    @FXML
+    private Label pdfNoticeLabel;
     
     private List<Path> selectedFiles = new ArrayList<>();
 
@@ -60,6 +75,10 @@ public class CompressionController {
         versionLabel.setText("Version " + UpdateChecker.getCurrentVersion());
 
         compressButton.setDisable(true);
+        outputFormatComboBox.getItems().setAll("ZIP", "PDF");
+        outputFormatComboBox.setValue("ZIP");
+        outputFormatComboBox.valueProperty().addListener(
+                (observable, oldFormat, newFormat) -> handleOutputFormatChanged());
 
         // Configuration de la cell factory pour la ListView
         filesListView.setCellFactory(listView -> new FileListCell());
@@ -114,67 +133,118 @@ public class CompressionController {
     }
 
     private void addDroppedFiles(List<File> files) {
-        for (File file : files) {
-            selectedFiles.add(file.toPath());
-            filesListView.getItems().add(file.getName());
-        }
+        List<Path> acceptedFiles = files.stream()
+                .map(File::toPath)
+                .filter(this::isAllowedForSelectedFormat)
+                .toList();
+        int rejectedCount = files.size() - acceptedFiles.size();
 
-        if (!files.isEmpty()) {
-            emptyState.setVisible(false);
-            emptyState.setManaged(false);
-
-            filesListView.setVisible(true);
-            filesListView.setManaged(true);
-
-            updateStatus(files.size() + " fichier(s) ajouté(s)");
+        addFilesToSelection(acceptedFiles);
+        if (rejectedCount > 0) {
+            updateStatus(rejectedCount + " fichier(s) ignoré(s) : seuls les fichiers .odt sont acceptés en PDF");
+        } else if (!acceptedFiles.isEmpty()) {
+            updateStatus(acceptedFiles.size() + " fichier(s) ajouté(s)");
         }
     }
     
     @FXML
     private void handleAddFiles() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Sélectionner des fichiers à compresser");
+        boolean pdfMode = isPdfMode();
+        fileChooser.setTitle(pdfMode
+                ? "Sélectionner des fichiers ODT"
+                : "Sélectionner des fichiers à compresser");
+        if (pdfMode) {
+            fileChooser.getExtensionFilters().setAll(
+                    new FileChooser.ExtensionFilter("Documents OpenDocument (*.odt)", "*.odt"));
+        }
 
         List<File> files = fileChooser.showOpenMultipleDialog(null);
 
-        if (files != null) {
-            for (File file : files) {
-                selectedFiles.add(file.toPath());
-                filesListView.getItems().add(file.getName());
+        if (files != null && !files.isEmpty()) {
+            List<Path> acceptedFiles = files.stream()
+                    .map(File::toPath)
+                    .filter(this::isAllowedForSelectedFormat)
+                    .toList();
+            addFilesToSelection(acceptedFiles);
+            if (acceptedFiles.size() < files.size()) {
+                updateStatus("Seuls les fichiers .odt sont acceptés en PDF");
+            } else if (!acceptedFiles.isEmpty()) {
+                updateStatus(acceptedFiles.size() + " fichier(s) ajouté(s)");
             }
-
-            // Cacher le message d'accueil
-            emptyState.setVisible(false);
-            emptyState.setManaged(false);
-
-            // Afficher la liste
-            filesListView.setVisible(true);
-            filesListView.setManaged(true);
-
-            compressButton.setDisable(false);
-
-            updateStatus(files.size() + " fichier(s) ajouté(s)");
         }
+    }
+
+    private void addFilesToSelection(List<Path> files) {
+        selectedFiles.addAll(files);
+        refreshFilesList();
+    }
+
+    private void refreshFilesList() {
+        filesListView.getItems().setAll(selectedFiles.stream()
+                .map(path -> java.nio.file.Files.isDirectory(path)
+                        ? "[Dossier] " + path.getFileName()
+                        : path.getFileName().toString())
+                .toList());
+
+        boolean hasFiles = !selectedFiles.isEmpty();
+        emptyState.setVisible(!hasFiles);
+        emptyState.setManaged(!hasFiles);
+        filesListView.setVisible(hasFiles);
+        filesListView.setManaged(hasFiles);
+        compressButton.setDisable(!hasFiles);
+    }
+
+    private boolean isAllowedForSelectedFormat(Path path) {
+        return !isPdfMode() || isOdtFile(path);
+    }
+
+    private boolean isOdtFile(Path path) {
+        return !java.nio.file.Files.isDirectory(path)
+                && path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".odt");
+    }
+
+    private boolean isPdfMode() {
+        return "PDF".equals(outputFormatComboBox.getValue());
+    }
+
+    private void handleOutputFormatChanged() {
+        boolean pdfMode = isPdfMode();
+        if (pdfMode) {
+            selectedFiles.removeIf(path -> !isOdtFile(path));
+        }
+
+        compressionOptions.setVisible(!pdfMode);
+        compressionOptions.setManaged(!pdfMode);
+        addDirectoryButton.setDisable(pdfMode);
+        formatsLabel.setText(pdfMode
+                ? "Fichiers .odt uniquement"
+                : "Tous les formats sont acceptés");
+        pdfNoticeLabel.setText("Rendu texte et mise en page simple");
+        pdfNoticeLabel.setVisible(pdfMode);
+        pdfNoticeLabel.setManaged(pdfMode);
+        compressButton.setText(pdfMode ? "Convertir en PDF" : "Compresser");
+        refreshFilesList();
+        compressionRatioLabel.setText("");
+        updateStatus(pdfMode
+                ? "Sélectionnez des fichiers ODT à convertir en PDF"
+                : "Format ZIP sélectionné");
     }
     
     @FXML
     private void handleAddDirectory() {
+        if (isPdfMode()) {
+            updateStatus("En mode PDF, seuls les fichiers .odt peuvent être sélectionnés");
+            return;
+        }
+
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Sélectionner un dossier à compresser");
 
         File directory = directoryChooser.showDialog(null);
 
         if (directory != null) {
-            selectedFiles.add(directory.toPath());
-            filesListView.getItems().add("[Dossier] " + directory.getName());
-
-            emptyState.setVisible(false);
-            emptyState.setManaged(false);
-
-            filesListView.setVisible(true);
-            filesListView.setManaged(true);
-
-            compressButton.setDisable(false);
+            addFilesToSelection(List.of(directory.toPath()));
 
             updateStatus("Dossier ajouté : " + directory.getName());
         }
@@ -183,23 +253,20 @@ public class CompressionController {
     @FXML
     private void handleClearList() {
         selectedFiles.clear();
-        filesListView.getItems().clear();
-
-        emptyState.setVisible(true);
-        emptyState.setManaged(true);
-
-        filesListView.setVisible(false);
-        filesListView.setManaged(false);
+        refreshFilesList();
 
         compressionRatioLabel.setText("");
-
-        compressButton.setDisable(true);
 
         updateStatus("Liste vidée");
     }
     
     @FXML
     private void handleCompress() {
+        if (isPdfMode()) {
+            handleConvertToPdf();
+            return;
+        }
+
         if (selectedFiles.isEmpty()) {
             showAlert("Erreur", "Veuillez ajouter des fichiers ou dossiers à compresser.");
             return;
@@ -241,6 +308,100 @@ public class CompressionController {
             }
         }
     }
+
+    private void handleConvertToPdf() {
+            if (selectedFiles.isEmpty()) {
+                showAlert("Erreur", "Veuillez ajouter au moins un fichier ODT à convertir.");
+                return;
+            }
+
+            List<Path> inputFiles = List.copyOf(selectedFiles);
+            List<Path> outputFiles = new ArrayList<>();
+            if (inputFiles.size() == 1) {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Enregistrer le fichier PDF");
+                fileChooser.getExtensionFilters().add(
+                        new FileChooser.ExtensionFilter("Fichier PDF", "*.pdf"));
+                String outputName = archiveNameField.getText().trim();
+                if (outputName.isEmpty()) {
+                    outputName = removeOdtExtension(inputFiles.get(0).getFileName().toString());
+                }
+                if (!outputName.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
+                    outputName += ".pdf";
+                }
+                fileChooser.setInitialFileName(outputName);
+                File outputFile = fileChooser.showSaveDialog(null);
+                if (outputFile == null) {
+                    return;
+                }
+                outputFiles.add(outputFile.toPath());
+            } else {
+                DirectoryChooser directoryChooser = new DirectoryChooser();
+                directoryChooser.setTitle("Choisir le dossier de destination des PDF");
+                File outputDirectory = directoryChooser.showDialog(null);
+                if (outputDirectory == null) {
+                    return;
+                }
+                for (Path inputFile : inputFiles) {
+                    outputFiles.add(outputDirectory.toPath().resolve(
+                            removeOdtExtension(inputFile.getFileName().toString()) + ".pdf"));
+                }
+                if (outputFiles.stream().distinct().count() != outputFiles.size()) {
+                    showAlert("Noms de fichiers en double",
+                            "Plusieurs documents ODT portent le même nom. Convertissez-les séparément pour éviter d'écraser un PDF.");
+                    return;
+                }
+                List<Path> existingOutputs = outputFiles.stream()
+                        .filter(java.nio.file.Files::exists)
+                        .toList();
+                if (!existingOutputs.isEmpty()) {
+                    Alert overwriteAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                    overwriteAlert.setTitle("Remplacer des fichiers ?");
+                    overwriteAlert.setHeaderText("Certains PDF existent déjà");
+                    overwriteAlert.setContentText("Voulez-vous remplacer les fichiers PDF existants ?");
+                    if (overwriteAlert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+                        return;
+                    }
+                }
+            }
+
+            compressButton.setDisable(true);
+            Task<List<Path>> conversionTask = new Task<>() {
+                @Override
+                protected List<Path> call() throws Exception {
+                    List<Path> convertedFiles = new ArrayList<>();
+                    for (int index = 0; index < inputFiles.size(); index++) {
+                        updateMessage("Conversion en cours (" + (index + 1) + "/" + inputFiles.size() + ")...");
+                        OdtToPdfService.convert(inputFiles.get(index), outputFiles.get(index));
+                        convertedFiles.add(outputFiles.get(index));
+                    }
+                    return convertedFiles;
+                }
+            };
+            conversionTask.messageProperty().addListener(
+                    (observable, oldMessage, newMessage) -> updateStatus(newMessage));
+            conversionTask.setOnSucceeded(event -> {
+                List<Path> convertedFiles = conversionTask.getValue();
+                updateStatus("Conversion PDF terminée avec succès");
+                compressionRatioLabel.setText(convertedFiles.size() + " fichier(s) PDF créé(s)");
+                showAlert("Succès", convertedFiles.size() + " fichier(s) converti(s) en PDF.");
+                compressButton.setDisable(selectedFiles.isEmpty());
+            });
+            conversionTask.setOnFailed(event -> {
+                Throwable error = conversionTask.getException();
+                updateStatus("Erreur lors de la conversion PDF");
+                showAlert("Erreur de conversion",
+                        error == null ? "La conversion ODT vers PDF a échoué." : error.getMessage());
+                compressButton.setDisable(selectedFiles.isEmpty());
+            });
+            Thread conversionThread = new Thread(conversionTask, "odt-to-pdf-conversion");
+            conversionThread.setDaemon(true);
+            conversionThread.start();
+        }
+
+    private String removeOdtExtension(String fileName) {
+        return fileName.substring(0, fileName.length() - ".odt".length());
+    }
     
     @FXML
     private void handleRemoveSelected() {
@@ -248,15 +409,7 @@ public class CompressionController {
 
         if (selectedIndex >= 0) {
             selectedFiles.remove(selectedIndex);
-            filesListView.getItems().remove(selectedIndex);
-
-            if (filesListView.getItems().isEmpty()) {
-                emptyState.setVisible(true);
-                emptyState.setManaged(true);
-
-                filesListView.setVisible(false);
-                filesListView.setManaged(false);
-            }
+            refreshFilesList();
 
             updateStatus("Élément supprimé");
         }
@@ -446,15 +599,7 @@ public class CompressionController {
                 int index = getIndex();
                 if (index >= 0) {
                     selectedFiles.remove(index);
-                    filesListView.getItems().remove(index);
-
-                    if (filesListView.getItems().isEmpty()) {
-                        emptyState.setVisible(true);
-                        emptyState.setManaged(true);
-                        filesListView.setVisible(false);
-                        filesListView.setManaged(false);
-                        compressButton.setDisable(true);
-                    }
+                    refreshFilesList();
                     updateStatus("Fichier supprimé");
                 }
             });

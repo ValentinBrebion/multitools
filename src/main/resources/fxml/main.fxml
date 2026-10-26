@@ -110,7 +110,7 @@
 
                     </VBox>
 
-                    <!-- Carte Compression -->
+                    <!-- Carte Convertisseur -->
                     <VBox spacing="12"
                           prefWidth="280"
                           prefHeight="180"
@@ -126,12 +126,12 @@
                         </HBox>
 
                         <VBox spacing="4">
-                            <Label text="Compression"
+                            <Label text="Convertisseur"
                                    style="-fx-font-size: 18px;
                                           -fx-font-weight: bold;
                                           -fx-text-fill: #1e293b;
                                           -fx-font-family: 'Segoe UI', sans-serif;"/>
-                            <Label text="Compresser et décompresser"
+                            <Label text="Archives ZIP et conversion ODT en PDF"
                                    style="-fx-font-size: 13px;
                                           -fx-text-fill: #64748b;
                                           -fx-font-family: 'Segoe UI', sans-serif;"/>
