@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.multitools.tools.qrcode.QRCodeReaderController"
+            stylesheets="@../style.css"
+            styleClass="root">
+    <top>
+        <HBox alignment="CENTER_LEFT"
+              spacing="12"
+              style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0; -fx-padding: 18 28;">
+            <Button text="← Retour"
+                    onAction="#handleBack"
+                    style="-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-font-size: 14px; -fx-cursor: hand;"/>
+            <Label text="▧" style="-fx-font-size: 26px; -fx-text-fill: #087edb;"/>
+            <VBox spacing="2">
+                <Label text="Lecteur de QR Code"
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                <Label text="Lire le contenu d'un QR Code depuis une image"
+                       style="-fx-font-size: 13px; -fx-text-fill: #64748b;"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="16" maxWidth="720"
+              style="-fx-padding: 32; -fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12;">
+            <Button text="Choisir une image"
+                    onAction="#handleChooseImage"
+                    styleClass="primary-button"/>
+            <Label fx:id="imageNameLabel"
+                   text="Aucune image sélectionnée"
+                   wrapText="true"
+                   style="-fx-text-fill: #64748b;"/>
+            <Label fx:id="statusLabel"
+                   wrapText="true"
+                   style="-fx-text-fill: #52677d;"/>
+            <Label text="Contenu du QR Code"
+                   style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+            <TextArea fx:id="resultArea"
+                      editable="false"
+                      wrapText="true"
+                      promptText="Le contenu décodé s'affichera ici."
+                      prefRowCount="8"
+                      VBox.vgrow="ALWAYS"
+                      style="-fx-font-size: 14px;"/>
+        </VBox>
+    </center>
+</BorderPane>

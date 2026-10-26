@@ -3,6 +3,7 @@ package com.example.multitools.tools.divers;
 import com.example.multitools.core.NavigationManager;
 import com.example.multitools.tools.converter.UnitConverterTool;
 import com.example.multitools.tools.qrcode.QRCodeTool;
+import com.example.multitools.tools.qrcode.QRCodeReaderTool;
 import com.example.multitools.update.UpdateChecker;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -28,6 +29,11 @@ public class DiversController {
     @FXML
     private void openQRCodeTool() {
         new QRCodeTool().open();
+    }
+
+    @FXML
+    private void openQRCodeReaderTool() {
+        new QRCodeReaderTool().open();
     }
 
     @FXML

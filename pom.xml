@@ -44,6 +44,12 @@
             <version>3.5.3</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+
         <!-- Rendu local et sécurisé des logos SVG -->
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
