@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import com.example.multitools.ui.BackButton?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -17,13 +18,7 @@
                      -fx-border-color: #cbd5df;
                      -fx-border-width: 0 0 1 0;
                      -fx-padding: 0 20 0 20;">
-            <Button text="← Retour"
-                    onAction="#handleBack"
-                    style="-fx-background-color: transparent;
-                           -fx-text-fill: #64748b;
-                           -fx-font-size: 14px;
-                           -fx-cursor: hand;
-                           -fx-padding: 8 12 8 12;"/>
+            <BackButton onAction="#handleBack"/>
             <Label text="📄"
                    style="-fx-font-family: 'Segoe UI Emoji';
                           -fx-font-size: 20px;"/>

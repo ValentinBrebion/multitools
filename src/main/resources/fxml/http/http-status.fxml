@@ -9,6 +9,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import com.example.multitools.ui.BackButton?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -19,9 +20,7 @@
         <HBox alignment="CENTER_LEFT"
               spacing="12"
               style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0; -fx-padding: 18 28;">
-            <Button text="← Retour"
-                    onAction="#handleBack"
-                    style="-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-font-size: 14px; -fx-cursor: hand;"/>
+            <BackButton onAction="#handleBack"/>
             <Label text="HTTP"
                    style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #087edb;"/>
             <VBox spacing="2">
