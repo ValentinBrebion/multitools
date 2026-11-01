@@ -5,14 +5,20 @@ import javafx.application.Platform;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.function.DoubleConsumer;
@@ -23,9 +29,14 @@ import java.util.regex.Pattern;
  * Mise à jour de Multitools via les releases GitHub.
  *
  * Flux : checkForUpdates() -> downloadUpdate() -> installAndExit().
- * L'asset de la release est un installateur (.exe) : on le lance en mode silencieux,
- * avec repli sur l'installateur classique si le mode silencieux échoue,
- * puis on relance l'application.
+ * L'asset de la release est un installateur .exe généré par jpackage : c'est une simple
+ * enveloppe autour d'un MSI, qui transmet tous ses arguments à msiexec. On le lance donc
+ * avec des options msiexec (/passive : barre de progression sans interaction, l'invite UAC
+ * reste possible puisque l'installation est « pour tous les utilisateurs »), avec repli sur
+ * l'installateur classique si cela échoue, puis on relance l'application.
+ *
+ * Les erreurs sont écrites dans un fichier temporaire (voir {@link #getErrorLogFile()}),
+ * à côté des journaux du script de mise à jour.
  */
 public class UpdateChecker {
 
@@ -33,6 +44,11 @@ public class UpdateChecker {
     private static final String LATEST_RELEASE_URL =
             "https://api.github.com/repos/ValentinBrebion/multitools/releases/latest";
     private static final String USER_AGENT = "Multitools";
+
+    /** Journal des erreurs de ce composant, dans le dossier temporaire du système. */
+    private static final Path ERROR_LOG =
+            Path.of(System.getProperty("java.io.tmpdir"), "multitools-updatechecker.log");
+    private static final DateTimeFormatter LOG_TIME = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     /** Premier asset .exe de la release. */
     private static final Pattern INSTALLER_URL =
@@ -72,11 +88,13 @@ public class UpdateChecker {
                 if (tag != null && asset.find() && isNewer(tag, getCurrentVersion())) {
                     return new UpdateInfo(true, tag, asset.group(1), jsonString(json, "body"));
                 }
+            } else {
+                logError("Vérification des mises à jour : code HTTP " + response.statusCode(), null);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (IOException e) {
-            System.err.println("Vérification des mises à jour impossible : " + e.getMessage());
+            logError("Vérification des mises à jour impossible", e);
         }
         return new UpdateInfo(false, getCurrentVersion(), null, null);
     }
@@ -92,7 +110,7 @@ public class UpdateChecker {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Impossible de lire version.properties : " + e.getMessage());
+            logError("Impossible de lire version.properties", e);
         }
         return FALLBACK_VERSION;
     }
@@ -107,7 +125,9 @@ public class UpdateChecker {
         HttpResponse<InputStream> response = http.send(request(url), HttpResponse.BodyHandlers.ofInputStream());
 
         if (response.statusCode() != 200) {
-            throw new IOException("Échec du téléchargement, code HTTP : " + response.statusCode());
+            String message = "Échec du téléchargement, code HTTP : " + response.statusCode();
+            logError(message + " (" + url + ")", null);
+            throw new IOException(message);
         }
 
         long total = response.headers().firstValueAsLong("Content-Length").orElse(-1);
@@ -126,7 +146,9 @@ public class UpdateChecker {
                 }
             }
             if (total > 0 && done != total) {
-                throw new IOException("Téléchargement incomplet (" + done + "/" + total + " octets)");
+                String message = "Téléchargement incomplet (" + done + "/" + total + " octets)";
+                logError(message + " (" + url + ")", null);
+                throw new IOException(message);
             }
         }
         return target;
@@ -155,26 +177,36 @@ public class UpdateChecker {
      * Le script attend la fermeture de l'appli, installe, puis relance.
      */
     public static void installAndExit(Path currentExe, Path installer) throws IOException {
-        Path script = createUpdateScript(currentExe, installer);
+        try {
+            Path script = createUpdateScript(currentExe, installer);
 
-        // wscript est une appli graphique : il lance le .bat dans une console masquée (style 0),
-        // sans aucune fenêtre ni clignotement. Le .vbs est supprimé par le .bat à la fin.
-        String name = script.getFileName().toString();
-        Path vbs = script.resolveSibling(name.substring(0, name.length() - 4) + ".vbs");
-        Files.writeString(vbs,
-                "CreateObject(\"WScript.Shell\").Run \"cmd.exe /c \"\"" + script + "\"\"\", 0, False",
-                Charset.forName(System.getProperty("native.encoding", "windows-1252")));
+            // wscript est une appli graphique : il lance le .bat dans une console masquée (style 0),
+            // sans aucune fenêtre ni clignotement. Le .vbs est supprimé par le .bat à la fin.
+            String name = script.getFileName().toString();
+            Path vbs = script.resolveSibling(name.substring(0, name.length() - 4) + ".vbs");
+            Files.writeString(vbs,
+                    "CreateObject(\"WScript.Shell\").Run \"cmd.exe /c \"\"" + script + "\"\"\", 0, False",
+                    Charset.forName(System.getProperty("native.encoding", "windows-1252")));
 
-        new ProcessBuilder("wscript.exe", "//Nologo", vbs.toString()).start();
+            new ProcessBuilder("wscript.exe", "//Nologo", vbs.toString()).start();
+        } catch (IOException e) {
+            logError("Impossible de lancer le script de mise à jour", e);
+            throw e;
+        }
 
         Platform.exit();
         System.exit(0);
     }
 
     /**
-     * Script .bat : attend la fermeture de l'appli, installe en silencieux (l'installateur
-     * demande lui-même l'UAC si besoin), bascule sur l'installateur classique en cas d'échec,
-     * relance l'appli, puis se supprime. Journal : multitools-update.log (dans %TEMP%).
+     * Script .bat : attend la fermeture de l'appli, installe via msiexec en mode /passive
+     * (l'installateur jpackage transmet ses arguments à msiexec ; l'UAC est demandé par
+     * Windows Installer car l'installation est dans Program Files), bascule sur l'installateur
+     * classique en cas d'échec, relance l'appli, puis se supprime.
+     *
+     * Journaux (dans %TEMP%) :
+     *  - multitools-update.log    : déroulement du script
+     *  - multitools-installer.log : journal détaillé de msiexec (/l*v)
      */
     private static Path createUpdateScript(Path currentExe, Path installer) throws IOException {
         Path script = Files.createTempFile("multitools-update", ".bat");
@@ -199,15 +231,16 @@ public class UpdateChecker {
                 "if !errorlevel! equ 0 if !TRIES! lss 30 goto waitloop",
                 "if !errorlevel! equ 0 goto stillrunning",
                 "",
-                "echo Installation silencieuse >> \"%LOG%\"",
-                "start \"\" /wait \"%INSTALLER%\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /LOG=\"%ILOG%\"",
+                "echo Installation (msiexec /passive) >> \"%LOG%\"",
+                "start \"\" /wait \"%INSTALLER%\" /passive /norestart /l*v \"%ILOG%\"",
                 "set RC=!errorlevel!",
                 "echo Code retour installateur: !RC! >> \"%LOG%\"",
+                "if !RC! equ 3010 goto relaunch",
                 "if !RC! neq 0 goto interactive",
                 "goto relaunch",
                 "",
                 ":interactive",
-                "echo Echec du mode silencieux, installateur classique >> \"%LOG%\"",
+                "echo Echec du mode passif, installateur classique >> \"%LOG%\"",
                 "start \"\" /wait \"%INSTALLER%\"",
                 "",
                 ":relaunch",
@@ -227,6 +260,35 @@ public class UpdateChecker {
 
         Files.writeString(script, content);
         return script;
+    }
+
+    // ------------------------------------------------------------------ Journal des erreurs
+
+    /** Fichier temporaire où sont écrites les erreurs de ce composant. */
+    public static Path getErrorLogFile() {
+        return ERROR_LOG;
+    }
+
+    /**
+     * Ajoute une erreur (avec sa pile d'appels si fournie) au fichier temporaire.
+     * N'échoue jamais : un problème d'écriture du journal ne doit pas bloquer la mise à jour.
+     */
+    private static synchronized void logError(String message, Throwable error) {
+        try {
+            StringBuilder entry = new StringBuilder()
+                    .append('[').append(LocalDateTime.now().format(LOG_TIME)).append("] ")
+                    .append(message)
+                    .append(System.lineSeparator());
+            if (error != null) {
+                StringWriter trace = new StringWriter();
+                error.printStackTrace(new PrintWriter(trace));
+                entry.append(trace);
+            }
+            Files.writeString(ERROR_LOG, entry.toString(), StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        } catch (IOException | RuntimeException ignored) {
+            // Rien à faire : on ne peut pas journaliser l'échec du journal.
+        }
     }
 
     // ------------------------------------------------------------------ Utilitaires
