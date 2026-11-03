@@ -1,9 +1,11 @@
 package com.example.multitools.tools.image;
 
 import com.example.multitools.core.NavigationManager;
+import javafx.animation.PauseTransition;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Alert;
@@ -11,6 +13,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelFormat;
@@ -21,6 +24,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
@@ -37,7 +41,7 @@ public class ImageBackgroundRemovalController {
 
     private static final int PREVIEW_MAX_WIDTH = 400;
     private static final int PREVIEW_MAX_HEIGHT = 220;
-    private static final int BACKGROUND_COLOR_TOLERANCE = 12;
+    private static final int DEFAULT_BACKGROUND_COLOR_TOLERANCE = 8;
 
     @FXML
     private StackPane dropZone;
@@ -46,11 +50,19 @@ public class ImageBackgroundRemovalController {
     @FXML
     private Label selectedFileLabel;
     @FXML
+    private ImageView sourceImageView;
+    @FXML
+    private Button clearSourceButton;
+    @FXML
     private Canvas previewCheckerboard;
     @FXML
     private ImageView previewImageView;
     @FXML
     private Label previewPlaceholder;
+    @FXML
+    private Slider toleranceSlider;
+    @FXML
+    private Label toleranceValueLabel;
     @FXML
     private TextField destinationField;
     @FXML
@@ -60,15 +72,29 @@ public class ImageBackgroundRemovalController {
 
     private Path selectedSource;
     private BufferedImage sourcePreview;
+    private PauseTransition previewRefreshDelay;
 
     @FXML
     public void initialize() {
         drawPreviewCheckerboard();
+        previewRefreshDelay = new PauseTransition(Duration.millis(250));
+        previewRefreshDelay.setOnFinished(event -> refreshPreview());
+        toleranceSlider.setValue(DEFAULT_BACKGROUND_COLOR_TOLERANCE);
+        updateToleranceLabel();
+        toleranceSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            updateToleranceLabel();
+            if (selectedSource != null) {
+                previewRefreshDelay.playFromStart();
+            }
+        });
         dropZone.setOnMouseClicked(event -> {
-            if (emptyState.isVisible()) {
+            if (emptyState.isVisible() && !isClearButtonTarget(event.getTarget())) {
                 chooseSource();
             }
         });
+        dropZone.hoverProperty().addListener(
+            (observable, wasHovered, isHovered) -> updateClearButtonVisibility()
+        );
         dropZone.setOnDragOver(event -> {
             if (event.getDragboard().hasFiles()) {
                 event.acceptTransferModes(TransferMode.COPY);
@@ -92,6 +118,7 @@ public class ImageBackgroundRemovalController {
             event.consume();
         });
         setDropZoneStyle(false);
+        updateDropZoneCursor();
     }
 
     @FXML
@@ -152,13 +179,14 @@ public class ImageBackgroundRemovalController {
             return;
         }
 
+        int tolerance = getSelectedTolerance();
         removeButton.setDisable(true);
         statusLabel.setText("Retrait du fond blanc en cours…");
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() throws Exception {
                 new ImageBackgroundRemovalService()
-                    .removeBackground(source, destination, BACKGROUND_COLOR_TOLERANCE);
+                    .removeBackground(source, destination, tolerance);
                 return null;
             }
         };
@@ -204,61 +232,124 @@ public class ImageBackgroundRemovalController {
     }
 
     private void setSource(Path source) {
+        previewRefreshDelay.stop();
         selectedSource = source.toAbsolutePath().normalize();
-        Path previewSource = selectedSource;
+        updateDropZoneCursor();
+        updateClearButtonVisibility();
+        sourceImageView.setVisible(true);
+        sourceImageView.setImage(null);
         sourcePreview = null;
         previewImageView.setImage(null);
-        previewPlaceholder.setText("Chargement de l'aperçu…");
-        previewPlaceholder.setVisible(true);
         emptyState.setVisible(false);
         emptyState.setManaged(false);
         selectedFileLabel.setText(selectedSource.getFileName().toString());
         selectedFileLabel.setVisible(true);
         selectedFileLabel.setManaged(true);
         destinationField.setText(selectedSource.resolveSibling(getDestinationName(selectedSource)).toString());
-        removeButton.setDisable(true);
-        statusLabel.setText("Chargement de l'image pour l'aperçu…");
+        loadPreview(selectedSource);
+    }
 
-        Task<BufferedImage> previewTask = new Task<>() {
+    @FXML
+    private void clearSource() {
+        previewRefreshDelay.stop();
+        selectedSource = null;
+        sourcePreview = null;
+        sourceImageView.setVisible(false);
+        sourceImageView.setImage(null);
+        previewImageView.setImage(null);
+        previewPlaceholder.setText("L'aperçu de l'image apparaîtra ici.");
+        previewPlaceholder.setVisible(true);
+        selectedFileLabel.setText("");
+        selectedFileLabel.setVisible(false);
+        selectedFileLabel.setManaged(false);
+        clearSourceButton.setVisible(false);
+        emptyState.setVisible(true);
+        emptyState.setManaged(true);
+        destinationField.clear();
+        removeButton.setDisable(true);
+        statusLabel.setText("Glissez-déposez une image ou cliquez pour en choisir une.");
+        updateDropZoneCursor();
+    }
+
+    private void updateDropZoneCursor() {
+        dropZone.setCursor(selectedSource == null
+            ? javafx.scene.Cursor.HAND
+            : javafx.scene.Cursor.DEFAULT);
+    }
+
+    private void updateClearButtonVisibility() {
+        boolean showClearButton = dropZone.isHover() && selectedSource != null;
+        clearSourceButton.setVisible(showClearButton);
+    }
+
+    private boolean isClearButtonTarget(Object target) {
+        if (!(target instanceof Node node)) {
+            return false;
+        }
+        while (node != null) {
+            if (node == clearSourceButton) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
+    }
+
+    private void loadPreview(Path previewSource) {
+        int tolerance = getSelectedTolerance();
+        previewPlaceholder.setText("Chargement de l'aperçu…");
+        previewPlaceholder.setVisible(true);
+        removeButton.setDisable(true);
+        statusLabel.setText("Mise à jour de l'aperçu…");
+
+        Task<PreviewImages> previewTask = new Task<>() {
             @Override
-            protected BufferedImage call() throws Exception {
+            protected PreviewImages call() throws Exception {
                 BufferedImage image = ImageIO.read(previewSource.toFile());
                 if (image == null) {
                     throw new IOException("Le fichier sélectionné ne contient pas une image valide.");
                 }
                 BufferedImage result = new ImageBackgroundRemovalService()
-                    .removeBackground(image, BACKGROUND_COLOR_TOLERANCE);
+                    .removeBackground(image, tolerance);
+                BufferedImage sourceThumbnail = createThumbnail(image);
+                BufferedImage resultThumbnail = createThumbnail(result);
+                return new PreviewImages(sourceThumbnail, resultThumbnail);
+            }
+
+            private BufferedImage createThumbnail(BufferedImage image) {
                 double scale = Math.min(
-                    (double) PREVIEW_MAX_WIDTH / result.getWidth(),
-                    (double) PREVIEW_MAX_HEIGHT / result.getHeight()
+                    (double) PREVIEW_MAX_WIDTH / image.getWidth(),
+                    (double) PREVIEW_MAX_HEIGHT / image.getHeight()
                 );
-                int width = Math.max(1, (int) Math.round(result.getWidth() * scale));
-                int height = Math.max(1, (int) Math.round(result.getHeight() * scale));
-                BufferedImage preview = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-                Graphics2D graphics = preview.createGraphics();
+                int width = Math.max(1, (int) Math.round(image.getWidth() * scale));
+                int height = Math.max(1, (int) Math.round(image.getHeight() * scale));
+                BufferedImage thumbnail = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D graphics = thumbnail.createGraphics();
                 try {
                     graphics.setRenderingHint(
                         RenderingHints.KEY_INTERPOLATION,
                         RenderingHints.VALUE_INTERPOLATION_BICUBIC
                     );
-                    graphics.drawImage(result, 0, 0, width, height, null);
+                    graphics.drawImage(image, 0, 0, width, height, null);
                 } finally {
                     graphics.dispose();
                 }
-                return preview;
+                return thumbnail;
             }
         };
         previewTask.setOnSucceeded(event -> {
-            if (!previewSource.equals(selectedSource)) {
+            if (!previewSource.equals(selectedSource) || tolerance != getSelectedTolerance()) {
                 return;
             }
-            sourcePreview = previewTask.getValue();
+            PreviewImages previews = previewTask.getValue();
+            sourceImageView.setImage(toFxImage(previews.sourceThumbnail()));
+            sourcePreview = previews.resultThumbnail();
             removeButton.setDisable(false);
             statusLabel.setText("Arrière-plan retiré dans l'aperçu. Enregistrez le PNG pour conserver le résultat.");
             updatePreview();
         });
         previewTask.setOnFailed(event -> {
-            if (!previewSource.equals(selectedSource)) {
+            if (!previewSource.equals(selectedSource) || tolerance != getSelectedTolerance()) {
                 return;
             }
             previewPlaceholder.setText("Impossible de prévisualiser cette image.");
@@ -276,15 +367,19 @@ public class ImageBackgroundRemovalController {
         if (sourcePreview == null) {
             return;
         }
-        int width = sourcePreview.getWidth();
-        int height = sourcePreview.getHeight();
-        int[] pixels = sourcePreview.getRGB(0, 0, width, height, null, 0, width);
+        previewImageView.setImage(toFxImage(sourcePreview));
+        previewPlaceholder.setVisible(false);
+    }
+
+    private WritableImage toFxImage(BufferedImage bufferedImage) {
+        int width = bufferedImage.getWidth();
+        int height = bufferedImage.getHeight();
+        int[] pixels = bufferedImage.getRGB(0, 0, width, height, null, 0, width);
         WritableImage image = new WritableImage(width, height);
         image.getPixelWriter().setPixels(
             0, 0, width, height, PixelFormat.getIntArgbInstance(), pixels, 0, width
         );
-        previewImageView.setImage(image);
-        previewPlaceholder.setVisible(false);
+        return image;
     }
 
     private void drawPreviewCheckerboard() {
@@ -299,6 +394,21 @@ public class ImageBackgroundRemovalController {
                 graphics.fillRect(x, y, tileSize, tileSize);
             }
         }
+    }
+
+    @FXML
+    private void refreshPreview() {
+        if (selectedSource != null) {
+            loadPreview(selectedSource);
+        }
+    }
+
+    private int getSelectedTolerance() {
+        return (int) Math.round(toleranceSlider.getValue());
+    }
+
+    private void updateToleranceLabel() {
+        toleranceValueLabel.setText("Tolérance : " + getSelectedTolerance());
     }
 
     private boolean isSupportedImage(Path path) {
@@ -357,5 +467,8 @@ public class ImageBackgroundRemovalController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private record PreviewImages(BufferedImage sourceThumbnail, BufferedImage resultThumbnail) {
     }
 }

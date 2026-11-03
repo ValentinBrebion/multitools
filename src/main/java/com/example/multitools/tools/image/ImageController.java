@@ -40,6 +40,19 @@ public class ImageController {
     }
 
     @FXML
+    private void openColorExtraction() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/image/image-color-extraction.fxml")
+            );
+            Parent root = loader.load();
+            NavigationManager.getInstance().navigateTo(root);
+        } catch (Exception e) {
+            showNavigationError("Impossible d'ouvrir l'extraction de couleurs", e);
+        }
+    }
+
+    @FXML
     private void handleBack() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main.fxml"));
@@ -55,7 +68,14 @@ public class ImageController {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Erreur");
         alert.setHeaderText(header);
-        alert.setContentText(exception.getMessage());
+        Throwable cause = exception;
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        String message = cause.getMessage();
+        alert.setContentText(message == null || message.isBlank()
+            ? cause.getClass().getSimpleName()
+            : message);
         alert.showAndWait();
     }
 }

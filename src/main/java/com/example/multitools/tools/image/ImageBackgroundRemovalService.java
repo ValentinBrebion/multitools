@@ -12,14 +12,7 @@ import java.util.Locale;
 
 public class ImageBackgroundRemovalService {
 
-    private static final int LUMA_BITS = 5;
-    private static final int CHROMA_BITS = 6;
-    private static final int LUMA_BIN_COUNT = 1 << LUMA_BITS;
-    private static final int CHROMA_BIN_COUNT = 1 << CHROMA_BITS;
-    private static final int COLOR_BIN_WIDTH = 1 << (8 - LUMA_BITS);
-    private static final int CHROMA_BIN_WIDTH = 1 << (8 - CHROMA_BITS);
-    private static final int COLOR_BIN_COUNT = 1 << (LUMA_BITS + CHROMA_BITS * 2);
-    private static final int CHROMA_TOLERANCE = 4;
+    private static final int EDGE_FEATHER = 12;
 
     public void removeBackground(Path source, Path destination, int tolerance) throws IOException {
         Path normalizedSource = source.toAbsolutePath().normalize();
@@ -78,18 +71,19 @@ public class ImageBackgroundRemovalService {
             throw new IllegalArgumentException("L'image est trop grande pour être traitée.");
         }
         int pixelCount = (int) pixelCountLong;
-        boolean[] borderColors = collectBorderColors(input);
-        boolean[] backgroundPalette = expandBorderColors(borderColors, tolerance);
+        int[] backgroundColors = collectBackgroundColors(input);
         int[] pixels = input.getRGB(0, 0, width, height, null, 0, width);
         byte[] backgroundMask = new byte[pixelCount];
+        int maximumDistance = tolerance + EDGE_FEATHER;
+        int maximumDistanceSquared = maximumDistance * maximumDistance;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                int argb = pixels[y * width + x];
-                int red = (argb >>> 16) & 0xff;
-                int green = (argb >>> 8) & 0xff;
-                int blue = argb & 0xff;
                 int index = y * width + x;
-                backgroundMask[index] = (byte) (backgroundPalette[colorBin(red, green, blue)] ? 1 : 0);
+                int backgroundColor = nearestBackgroundColor(pixels[index], backgroundColors);
+                if ((pixels[index] >>> 24) != 0 && backgroundColor >= 0
+                    && colorDistanceSquared(pixels[index], backgroundColor) <= maximumDistanceSquared) {
+                    backgroundMask[index] = 1;
+                }
             }
         }
 
@@ -99,62 +93,113 @@ public class ImageBackgroundRemovalService {
         );
         for (int index = 0; index < pixelCount; index++) {
             if (backgroundMask[index] == 2) {
-                pixels[index] &= 0x00ffffff;
+                int backgroundColor = nearestBackgroundColor(pixels[index], backgroundColors);
+                pixels[index] = applySoftMatte(pixels[index], backgroundColor, tolerance);
             }
         }
         output.setRGB(0, 0, width, height, pixels, 0, width);
         return output;
     }
 
-    private boolean[] collectBorderColors(BufferedImage input) {
+    private int[] collectBackgroundColors(BufferedImage input) {
         int width = input.getWidth();
         int height = input.getHeight();
-        boolean[] borderColors = new boolean[COLOR_BIN_COUNT];
-        int sampleWidth = Math.max(1, width / 5);
-        int sampleHeight = Math.max(1, height / 8);
+        int sampleWidth = Math.max(1, width / 12);
+        int sampleHeight = Math.max(1, height / 12);
         int stride = Math.max(1, Math.min(width, height) / 200);
+        return new int[] {
+            medianCornerColor(input, 0, sampleWidth, sampleHeight, stride),
+            medianCornerColor(input, width - sampleWidth, sampleWidth, sampleHeight, stride)
+        };
+    }
+
+    private int medianCornerColor(BufferedImage input, int startX, int sampleWidth,
+                                  int sampleHeight, int stride) {
+        int[] redHistogram = new int[256];
+        int[] greenHistogram = new int[256];
+        int[] blueHistogram = new int[256];
+        int sampleCount = 0;
         for (int y = 0; y < sampleHeight; y += stride) {
             for (int x = 0; x < sampleWidth; x += stride) {
-                addBorderColor(input.getRGB(x, y), borderColors);
-                addBorderColor(input.getRGB(width - 1 - x, y), borderColors);
+                int argb = input.getRGB(startX + x, y);
+                if ((argb >>> 24) < 16) {
+                    continue;
+                }
+                redHistogram[(argb >>> 16) & 0xff]++;
+                greenHistogram[(argb >>> 8) & 0xff]++;
+                blueHistogram[argb & 0xff]++;
+                sampleCount++;
             }
         }
-        return borderColors;
-    }
-
-    private void addBorderColor(int argb, boolean[] borderColors) {
-        if (((argb >>> 24) & 0xff) < 16) {
-            return;
+        if (sampleCount == 0) {
+            return -1;
         }
-        borderColors[colorBin((argb >>> 16) & 0xff, (argb >>> 8) & 0xff, argb & 0xff)] = true;
+        int red = histogramMedian(redHistogram, sampleCount);
+        int green = histogramMedian(greenHistogram, sampleCount);
+        int blue = histogramMedian(blueHistogram, sampleCount);
+        return (red << 16) | (green << 8) | blue;
     }
 
-    private boolean[] expandBorderColors(boolean[] borderColors, int tolerance) {
-        boolean[] palette = new boolean[COLOR_BIN_COUNT];
-        int radius = (tolerance + COLOR_BIN_WIDTH - 1) / COLOR_BIN_WIDTH;
-        int chromaRadius = (CHROMA_TOLERANCE + CHROMA_BIN_WIDTH - 1) / CHROMA_BIN_WIDTH;
-        for (int bin = 0; bin < borderColors.length; bin++) {
-            if (!borderColors[bin]) {
+    private int histogramMedian(int[] histogram, int sampleCount) {
+        int medianIndex = sampleCount / 2;
+        int accumulated = 0;
+        for (int value = 0; value < histogram.length; value++) {
+            accumulated += histogram[value];
+            if (accumulated > medianIndex) {
+                return value;
+            }
+        }
+        throw new IllegalStateException("L'histogramme de couleur est vide.");
+    }
+
+    private int nearestBackgroundColor(int argb, int[] backgroundColors) {
+        int nearestColor = -1;
+        int nearestDistance = Integer.MAX_VALUE;
+        for (int backgroundColor : backgroundColors) {
+            if (backgroundColor < 0) {
                 continue;
             }
-            int lumaBin = (bin >>> (CHROMA_BITS * 2)) & (LUMA_BIN_COUNT - 1);
-            int redChromaBin = (bin >>> CHROMA_BITS) & (CHROMA_BIN_COUNT - 1);
-            int greenChromaBin = bin & (CHROMA_BIN_COUNT - 1);
-            for (int luma = Math.max(0, lumaBin - radius);
-                 luma <= Math.min(LUMA_BIN_COUNT - 1, lumaBin + radius); luma++) {
-                for (int redChroma = Math.max(0, redChromaBin - chromaRadius);
-                     redChroma <= Math.min(CHROMA_BIN_COUNT - 1, redChromaBin + chromaRadius);
-                     redChroma++) {
-                    for (int greenChroma = Math.max(0, greenChromaBin - chromaRadius);
-                         greenChroma <= Math.min(CHROMA_BIN_COUNT - 1, greenChromaBin + chromaRadius);
-                         greenChroma++) {
-                        palette[(luma << (CHROMA_BITS * 2))
-                            | (redChroma << CHROMA_BITS) | greenChroma] = true;
-                    }
-                }
+            int distance = colorDistanceSquared(argb, backgroundColor);
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestColor = backgroundColor;
             }
         }
-        return palette;
+        return nearestColor;
+    }
+
+    private int colorDistanceSquared(int firstArgb, int secondRgb) {
+        int redDifference = ((firstArgb >>> 16) & 0xff) - ((secondRgb >>> 16) & 0xff);
+        int greenDifference = ((firstArgb >>> 8) & 0xff) - ((secondRgb >>> 8) & 0xff);
+        int blueDifference = (firstArgb & 0xff) - (secondRgb & 0xff);
+        return redDifference * redDifference
+            + greenDifference * greenDifference
+            + blueDifference * blueDifference;
+    }
+
+    private int applySoftMatte(int argb, int backgroundRgb, int tolerance) {
+        double distance = Math.sqrt(colorDistanceSquared(argb, backgroundRgb));
+        double matte = Math.max(0, Math.min(1, (distance - tolerance) / EDGE_FEATHER));
+        matte = matte * matte * (3 - 2 * matte);
+        int sourceAlpha = (argb >>> 24) & 0xff;
+        int outputAlpha = (int) Math.round(sourceAlpha * matte);
+        if (outputAlpha == 0) {
+            return argb & 0x00ffffff;
+        }
+
+        double remainingBackground = 1 - matte;
+        int red = removeBackgroundColor((argb >>> 16) & 0xff,
+            (backgroundRgb >>> 16) & 0xff, remainingBackground, matte);
+        int green = removeBackgroundColor((argb >>> 8) & 0xff,
+            (backgroundRgb >>> 8) & 0xff, remainingBackground, matte);
+        int blue = removeBackgroundColor(argb & 0xff,
+            backgroundRgb & 0xff, remainingBackground, matte);
+        return (outputAlpha << 24) | (red << 16) | (green << 8) | blue;
+    }
+
+    private int removeBackgroundColor(int source, int background, double remainingBackground, double matte) {
+        return (int) Math.round(Math.max(0, Math.min(255,
+            (source - background * remainingBackground) / matte)));
     }
 
     private void findBorderConnectedBackground(byte[] mask, int width, int height) {
@@ -200,10 +245,10 @@ public class ImageBackgroundRemovalService {
                     if (mask[nextIndex] == 1) {
                         mask[nextIndex] = 2;
                         if (queueSize == queue.length) {
-                        int newCapacity = (int) Math.min(pixelCount, (long) queue.length * 2);
-                        queue = Arrays.copyOf(queue, newCapacity);
-                    }
-                    queue[queueSize++] = nextIndex;
+                            int newCapacity = (int) Math.min(pixelCount, (long) queue.length * 2);
+                            queue = Arrays.copyOf(queue, newCapacity);
+                        }
+                        queue[queueSize++] = nextIndex;
                     }
                 }
             }
@@ -216,14 +261,5 @@ public class ImageBackgroundRemovalService {
             queue[queueSize++] = index;
         }
         return queueSize;
-    }
-
-    private int colorBin(int red, int green, int blue) {
-        int luma = (red * 299 + green * 587 + blue * 114) / 1000;
-        int redChroma = red - blue + 255;
-        int greenChroma = green - blue + 255;
-        return ((luma >>> (8 - LUMA_BITS)) << (CHROMA_BITS * 2))
-            | ((redChroma >>> (8 - CHROMA_BITS)) << CHROMA_BITS)
-            | (greenChroma >>> (8 - CHROMA_BITS));
     }
 }

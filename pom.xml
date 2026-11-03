@@ -70,6 +70,13 @@
             <version>0.1.6</version>
         </dependency>
 
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Fusion de documents PDF -->
         <dependency>
             <groupId>org.apache.pdfbox</groupId>

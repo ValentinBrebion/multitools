@@ -4,6 +4,7 @@
 <?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
 <?import com.example.multitools.ui.BackButton?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17"
@@ -62,8 +63,7 @@
                                       -fx-border-color: #cbd5df;
                                       -fx-border-width: 1;
                                       -fx-border-radius: 10;
-                                      -fx-background-radius: 10;
-                                      -fx-cursor: hand;">
+                                      -fx-background-radius: 10;">
                         <VBox fx:id="emptyState"
                               alignment="CENTER"
                               spacing="10">
@@ -82,14 +82,38 @@
                                    style="-fx-font-size: 12px;
                                           -fx-text-fill: #94a3b8;"/>
                         </VBox>
+                        <ImageView fx:id="sourceImageView"
+                                   fitWidth="260"
+                                   fitHeight="160"
+                                   preserveRatio="true"
+                                   smooth="true"
+                                   visible="false"
+                                   mouseTransparent="true"/>
                         <Label fx:id="selectedFileLabel"
                                visible="false"
                                managed="false"
                                wrapText="true"
                                maxWidth="600"
+                               StackPane.alignment="BOTTOM_CENTER"
                                style="-fx-font-size: 16px;
                                       -fx-font-weight: bold;
-                                      -fx-text-fill: #087edb;"/>
+                                      -fx-text-fill: #087edb;
+                                      -fx-padding: 6 10 6 10;
+                                      -fx-background-color: rgba(255,255,255,0.88);
+                                      -fx-background-radius: 6;"/>
+                        <Button fx:id="clearSourceButton"
+                                accessibleText="Retirer l'image sélectionnée"
+                                onAction="#clearSource"
+                                visible="false"
+                                styleClass="image-clear-button"
+                                StackPane.alignment="TOP_RIGHT"
+                                translateX="-10"
+                                translateY="10">
+                            <graphic>
+                                <SVGPath content="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                                         style="-fx-fill: white;"/>
+                            </graphic>
+                        </Button>
                     </StackPane>
 
                     <Label text="Aperçu du résultat"
@@ -123,6 +147,27 @@
                            style="-fx-font-size: 13px;
                                   -fx-text-fill: #64748b;"/>
 
+                    <HBox alignment="CENTER_LEFT" spacing="12">
+                        <Label fx:id="toleranceValueLabel"
+                               text="Tolérance : 24"
+                               minWidth="110"
+                               style="-fx-font-size: 14px;
+                                      -fx-font-weight: bold;
+                                      -fx-text-fill: #1e293b;"/>
+                        <Slider fx:id="toleranceSlider"
+                                min="0"
+                                max="80"
+                                majorTickUnit="20"
+                                blockIncrement="1"
+                                showTickMarks="true"
+                                showTickLabels="true"
+                                HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                    <Label text="Augmentez la tolérance pour retirer davantage de taches claires. Une valeur élevée peut aussi effacer des détails blancs du sujet."
+                           wrapText="true"
+                           style="-fx-font-size: 12px;
+                                  -fx-text-fill: #64748b;"/>
+
                     <Label text="Fichier PNG de destination"
                            style="-fx-font-size: 16px;
                                   -fx-font-weight: bold;
@@ -138,7 +183,7 @@
                     </HBox>
 
                     <Label fx:id="statusLabel"
-                           text="La tolérance adoucit les contours des zones blanches. Le résultat est enregistré en PNG transparent."
+                           text="Ajustez la tolérance puis vérifiez l'aperçu. Le résultat est enregistré en PNG transparent."
                            wrapText="true"
                            style="-fx-text-fill: #64748b;
                                   -fx-font-size: 13px;"/>

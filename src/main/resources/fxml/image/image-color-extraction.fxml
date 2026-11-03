@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import com.example.multitools.ui.BackButton?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.multitools.tools.image.ImageColorExtractionController"
+            stylesheets="@../style.css"
+            styleClass="root">
+    <top>
+        <HBox alignment="CENTER_LEFT"
+              spacing="12"
+              prefHeight="82"
+              style="-fx-background-color: #f5f7f9;
+                     -fx-border-color: #cbd5df;
+                     -fx-border-width: 0 0 1 0;
+                     -fx-padding: 0 20 0 20;">
+            <BackButton onAction="#handleBack"/>
+            <Region prefWidth="10"/>
+            <Label text="🎨"
+                   style="-fx-font-size: 24px;
+                          -fx-font-family: 'Segoe UI Emoji';"/>
+            <VBox spacing="2">
+                <Label text="Extraire les couleurs"
+                       style="-fx-font-size: 20px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #111827;"/>
+                <Label text="Créez une palette à partir de votre image"
+                       style="-fx-font-size: 14px;
+                              -fx-text-fill: #64748b;"/>
+            </VBox>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true"
+                    style="-fx-background-color: #f8fafc;
+                           -fx-border-color: transparent;">
+            <VBox alignment="TOP_CENTER"
+                  style="-fx-padding: 32;">
+                <VBox spacing="18"
+                      maxWidth="800"
+                      style="-fx-background-color: white;
+                             -fx-background-radius: 12;
+                             -fx-border-color: #e2e8f0;
+                             -fx-border-radius: 12;
+                             -fx-padding: 28;">
+                    <Label text="Image source"
+                           style="-fx-font-size: 16px;
+                                  -fx-font-weight: bold;
+                                  -fx-text-fill: #1e293b;"/>
+                    <StackPane fx:id="dropZone"
+                               minHeight="270"
+                               prefHeight="270"
+                               style="-fx-background-color: white;
+                                      -fx-border-color: #cbd5df;
+                                      -fx-border-width: 1;
+                                      -fx-border-radius: 10;
+                                      -fx-background-radius: 10;">
+                        <Canvas fx:id="previewCheckerboard"
+                                width="640"
+                                height="270"/>
+                        <VBox fx:id="emptyState"
+                              alignment="CENTER"
+                              spacing="8">
+                            <Label text="⇧"
+                                   style="-fx-text-fill: #087edb;
+                                          -fx-font-size: 32px;
+                                          -fx-font-weight: bold;"/>
+                            <Label text="Glissez-déposez une image ici"
+                                   style="-fx-font-size: 16px;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #334155;"/>
+                            <Label text="ou cliquez pour parcourir les fichiers"
+                                   style="-fx-font-size: 13px;
+                                          -fx-text-fill: #64748b;"/>
+                            <Label text="PNG, JPG, GIF, BMP ou WebP"
+                                   style="-fx-font-size: 12px;
+                                          -fx-text-fill: #94a3b8;"/>
+                        </VBox>
+                        <ImageView fx:id="imagePreview"
+                                   fitWidth="640"
+                                   fitHeight="270"
+                                   preserveRatio="true"
+                                   smooth="true"
+                                   visible="false"
+                                   mouseTransparent="true"/>
+                    </StackPane>
+                    <HBox alignment="CENTER_LEFT" spacing="12">
+                        <Label fx:id="selectedFileLabel"
+                               text="Aucune image sélectionnée"
+                               wrapText="true"
+                               style="-fx-text-fill: #64748b;
+                                      -fx-font-size: 13px;"
+                               HBox.hgrow="ALWAYS"/>
+                        <Button text="Choisir une image…"
+                                onAction="#chooseImage"
+                                styleClass="secondary-button"/>
+                    </HBox>
+
+                    <Separator/>
+                    <HBox alignment="CENTER_LEFT" spacing="12">
+                        <Label text="Taille de la palette"
+                               style="-fx-font-size: 16px;
+                                      -fx-font-weight: bold;
+                                      -fx-text-fill: #1e293b;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="colorCountLabel"
+                               text="6 couleurs"
+                               style="-fx-font-weight: bold;
+                                      -fx-text-fill: #087edb;"/>
+                    </HBox>
+                    <Slider fx:id="colorCountSlider"
+                            min="2"
+                            max="12"
+                            majorTickUnit="2"
+                            blockIncrement="1"
+                            snapToTicks="true"
+                            showTickMarks="true"
+                            showTickLabels="true"/>
+                    <Label text="Les couleurs les plus présentes sont affichées en premier. Cliquez sur une couleur pour copier son code HEX."
+                           wrapText="true"
+                           style="-fx-font-size: 13px;
+                                  -fx-text-fill: #64748b;"/>
+                    <FlowPane fx:id="paletteFlow"
+                              hgap="12"
+                              vgap="12"
+                              alignment="CENTER_LEFT"/>
+                    <HBox alignment="CENTER_LEFT" spacing="12">
+                        <Label fx:id="statusLabel"
+                               text="Sélectionnez une image pour extraire sa palette."
+                               wrapText="true"
+                               style="-fx-font-size: 13px;
+                                      -fx-text-fill: #64748b;"
+                               HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="copyAllButton"
+                                text="Copier la palette"
+                                onAction="#copyAllColors"
+                                disable="true"
+                                styleClass="primary-button"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

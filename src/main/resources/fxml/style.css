@@ -18,6 +18,23 @@
     -fx-background-radius: 7px;
 }
 
+.image-clear-button {
+    -fx-background-color: #dc2626;
+    -fx-text-fill: white;
+    -fx-font-family: "Segoe UI Emoji";
+    -fx-font-size: 16px;
+    -fx-background-radius: 18px;
+    -fx-min-width: 36px;
+    -fx-min-height: 36px;
+    -fx-max-width: 36px;
+    -fx-max-height: 36px;
+    -fx-cursor: hand;
+}
+
+.image-clear-button:hover {
+    -fx-background-color: #dc2626;
+}
+
 /* Styles pour les cartes d'outils */
 .tool-card {
     -fx-background-color: white;
