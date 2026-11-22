@@ -42,6 +42,11 @@ public class SecurityController {
     }
 
     @FXML
+    private void openNetworkAnalyzer() {
+        new NetworkAnalyzerTool().open();
+    }
+
+    @FXML
     private void handleBack() {
         try {
             FXMLLoader loader = new FXMLLoader(
