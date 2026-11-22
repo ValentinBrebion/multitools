@@ -159,7 +159,12 @@ public class NetworkAnalyzerController {
 
     @FXML
     private void handleBack() {
-        captureService.stopCapture();
+        try {
+            captureService.stopCapture();
+        } catch (NotOpenException e) {
+            summaryLabel.setText("La capture est déjà en cours de fermeture.");
+            summaryLabel.setStyle("-fx-text-fill: #475569; -fx-font-size: 14px;");
+        }
         tableRefresh.stop();
         try {
             FXMLLoader loader = new FXMLLoader(
