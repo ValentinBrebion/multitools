@@ -66,7 +66,6 @@ public class SecurityController {
 
     @FXML
     private void handleUpdateCheck() {
-        showAlert("Mise à jour", "Recherche de mises à jour...");
         
         Thread updateThread = new Thread(() -> {
             UpdateChecker checker = new UpdateChecker();

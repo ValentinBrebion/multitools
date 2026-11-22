@@ -201,7 +201,6 @@ public class PasswordGeneratorController {
 
     @FXML
     private void handleUpdateCheck() {
-        updateStatus("Recherche de mises à jour...");
         
         Thread updateThread = new Thread(() -> {
             UpdateChecker checker = new UpdateChecker();

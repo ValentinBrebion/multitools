@@ -51,10 +51,6 @@ public class DiversController {
     @FXML
     private void handleUpdateCheck() {
         Alert searchingAlert = new Alert(Alert.AlertType.INFORMATION);
-        searchingAlert.setTitle("Mise à jour");
-        searchingAlert.setHeaderText(null);
-        searchingAlert.setContentText("Recherche de mises à jour...");
-        searchingAlert.show();
 
         Thread updateThread = new Thread(() -> {
             UpdateChecker checker = new UpdateChecker();

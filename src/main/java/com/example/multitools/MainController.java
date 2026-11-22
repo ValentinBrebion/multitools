@@ -168,7 +168,6 @@ public class MainController {
     
     @FXML
     private void handleUpdateCheck() {
-        showAlert("Mise à jour", "Recherche de mises à jour...");
         
         Thread updateThread = new Thread(() -> {
             com.example.multitools.update.UpdateChecker checker = new com.example.multitools.update.UpdateChecker();

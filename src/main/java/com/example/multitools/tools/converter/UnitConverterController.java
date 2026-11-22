@@ -266,9 +266,6 @@ public class UnitConverterController {
     @FXML
     private void handleUpdateCheck() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Mise à jour");
-        alert.setHeaderText(null);
-        alert.setContentText("Recherche de mises à jour...");
 
         Thread updateThread = new Thread(() -> {
             UpdateChecker checker = new UpdateChecker();
